@@ -55,6 +55,7 @@ public class ControladorVentanaDePartida implements Initializable {
 
 	private ControladorTablero controladorTablero;
 	private ControladorMazosYTurnos controladorMazosYTurnos;
+	private ControladorPrincipal controladorPrincipal;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -81,6 +82,36 @@ public class ControladorVentanaDePartida implements Initializable {
 		btnCartaGrande.setOnAction(e -> controladorMazosYTurnos.usarCartaPendiente(motor));
 
 		controladorMazosYTurnos.estadoInicial();
+		if (controladorPrincipal != null) {
+			controladorMazosYTurnos.setControladorPrincipal(controladorPrincipal);
+		}
+	}
+
+	/**
+	 * Asigna la referencia al controlador principal de la aplicación.
+	 * @param controladorPrincipal Instancia de ControladorPrincipal.
+	 */
+	public void setControladorPrincipal(ControladorPrincipal controladorPrincipal) {
+		this.controladorPrincipal = controladorPrincipal;
+		if (controladorMazosYTurnos != null) {
+			controladorMazosYTurnos.setControladorPrincipal(controladorPrincipal);
+		}
+	}
+
+	/**
+	 * Obtiene el controlador principal asignado a esta vista.
+	 * @return Instancia de ControladorPrincipal o null si no se ha asignado.
+	 */
+	public ControladorPrincipal getControladorPrincipal() {
+		return controladorPrincipal;
+	}
+
+	/**
+	 * Obtiene el controlador de mazos y turnos.
+	 * @return Instancia de ControladorMazosYTurnos.
+	 */
+	public ControladorMazosYTurnos getControladorMazosYTurnos() {
+		return controladorMazosYTurnos;
 	}
 
 	public void inicializarConMotor(MotorDeTurnos motor) {

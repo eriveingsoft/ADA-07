@@ -1,0 +1,9 @@
+# AI Usage Log
+
+| Fecha | Herramienta | Tarea / Prompt | Resultado |
+| :--- | :--- | :--- | :--- |
+| 2026-10-24 | Gemini Advanced | Análisis de la Especificación de Requisitos (ERS_EBOGE.md) para identificar un RF viable para probar las capacidades del agente. | Identificamos la falta de validaciones en la creación de jugadores (RF-01) y la ausencia del botón de reinicio (RF-13) para definir el `TASK_UNDER_TEST.md`. |
+| 2026-10-24 | Antigravity (LLM) | Ejecución de prueba BEFORE enviando el prompt de implementación del CR-01 (Reinicio de Partida) sin proveer contexto adicional. | El agente logró implementar el código, pero expuso la falta de estandarización al inventar rutas absolutas locales (`C:\Users\...`) para compilar y ejecutar JUnit, evidenciando que el repo no era "Agent-Ready". |
+| 2026-10-24 | Gemini Advanced | Diseño de guardrails y scripts ejecutables (`verify_repo.ps1` y `check_repo_contract.py`). | Se generaron scripts en PowerShell y Python adaptados a la estructura MVC del proyecto Java para unificar la compilación y proteger los archivos de contexto. |
+| 2026-10-24 | Gemini Advanced | Redacción de las reglas operativas y convenciones de arquitectura. | Se estructuraron los archivos `AGENTS.md` y `docs/REPO_MAP.md` para prohibir la mezcla de lógica en la UI y forzar el uso de rutas relativas. |
+| 2026-10-24 | Antigravity (LLM) | Ejecución de prueba AFTER enviando el mismo prompt del CR-01 tras aplicar los artefactos Agent-Ready. | El agente leyó el contexto exitosamente, respetó la arquitectura, y usó el script estándar `verify_repo.ps1` sin requerir suposiciones, logrando un resultado PASS reproducible. |

@@ -26,11 +26,27 @@ if (-Not (Test-Path -Path $binDir)) {
     New-Item -ItemType Directory -Path $binDir | Out-Null
 }
 
+# Detección dinámica y portable de JavaFX (sin hardcodear rutas absolutas de usuario)
+$fxPath = $env:PATH_TO_FX
+if (-not $fxPath -or -not (Test-Path $fxPath)) {
+    $candidate = Get-ChildItem -Path "${env:ProgramFiles}\Java", "${env:ProgramFiles(x86)}\Java", $env:JAVA_HOME -Filter "javafx-sdk*" -Recurse -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($candidate) {
+        $fxPath = Join-Path $candidate.FullName "lib"
+    }
+}
+$fxArgs = @()
+if ($fxPath -and (Test-Path $fxPath)) {
+    $fxArgs = @("--module-path", $fxPath, "--add-modules", "javafx.controls,javafx.fxml,javafx.media")
+}
+
 # Usamos find equivalente en PowerShell para compilar recursivamente todo el código
 $javaFiles = Get-ChildItem -Path $srcDir -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
 if ($javaFiles.Count -gt 0) {
-    # NOTA: Asumimos que javac y las variables de entorno de Java/JavaFX están configuradas globalmente en el PATH
-    javac -d $binDir $javaFiles
+    if ($fxArgs.Count -gt 0) {
+        javac $fxArgs -d $binDir $javaFiles
+    } else {
+        javac -d $binDir $javaFiles
+    }
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: La compilación del código fuente falló." -ForegroundColor Red
         exit 1
@@ -39,13 +55,73 @@ if ($javaFiles.Count -gt 0) {
     Write-Host "No se encontraron archivos .java en src." -ForegroundColor Yellow
 }
 
-Write-Host "[3/3] Ejecutando pruebas unitarias JUnit..." -ForegroundColor Cyan
-# Compilamos y corremos tests si existen
+Write-Host "[3/3] Compilando pruebas unitarias JUnit..." -ForegroundColor Cyan
+# Detección dinámica y portable de dependencias JUnit en repositorio local m2
+$m2Repo = Join-Path $HOME ".m2/repository"
+$junitJars = @()
+if (Test-Path $m2Repo) {
+    $junitJars = Get-ChildItem -Path $m2Repo -Recurse -Filter "*.jar" -ErrorAction SilentlyContinue |
+        Where-Object { ($_.FullName -match "junit|opentest4j|apiguardian") -and ($_.FullName -notmatch "sources|javadoc") } |
+        Select-Object -ExpandProperty FullName
+}
+$sep = [System.IO.Path]::PathSeparator
+$cp = if ($junitJars.Count -gt 0) { "$binDir$sep" + ($junitJars -join $sep) } else { $binDir }
+
 $testFiles = Get-ChildItem -Path $testDir -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
 if ($testFiles.Count -gt 0) {
-    javac -cp $binDir -d $binDir $testFiles
-    # Aquí un agente o un CI podría inyectar el classpath a JUnit si estuviera configurado con Maven
-    Write-Host "Pruebas compiladas correctamente. (Ejecución omitida por falta de dependencias Maven/Gradle locales explícitas)" -ForegroundColor Yellow
+    if ($fxArgs.Count -gt 0) {
+        javac $fxArgs -cp $cp -d $binDir $testFiles
+    } else {
+        javac -cp $cp -d $binDir $testFiles
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: La compilación de pruebas unitarias falló." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Pruebas compiladas correctamente." -ForegroundColor Green
+
+    # Ejecución de pruebas unitarias de reinicio de partida (CR-01 / RF-13)
+    $testRunnerFile = Join-Path $binDir "RunRestartTests.java"
+    $runnerSource = @"
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import java.io.PrintWriter;
+
+public class RunRestartTests {
+    public static void main(String[] args) {
+        LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
+            .selectors(selectClass("controlador.ReiniciarPartidaTest"))
+            .build();
+        Launcher launcher = LauncherFactory.create();
+        SummaryGeneratingListener listener = new SummaryGeneratingListener();
+        launcher.registerTestExecutionListeners(listener);
+        launcher.execute(request);
+        TestExecutionSummary summary = listener.getSummary();
+        summary.printTo(new PrintWriter(System.out));
+        if (summary.getTotalFailureCount() > 0) {
+            System.exit(1);
+        }
+    }
+}
+"@
+    Set-Content -Path $testRunnerFile -Value $runnerSource -Encoding utf8
+    if ($fxArgs.Count -gt 0) {
+        javac $fxArgs -cp $cp -d $binDir $testRunnerFile
+        java $fxArgs -cp $cp RunRestartTests
+    } else {
+        javac -cp $cp -d $binDir $testRunnerFile
+        java -cp $cp RunRestartTests
+    }
+    Remove-Item -Path (Join-Path $binDir "RunRestartTests*") -Force -ErrorAction SilentlyContinue
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: La ejecución de pruebas unitarias falló." -ForegroundColor Red
+        exit 1
+    }
 } else {
      Write-Host "No se encontraron pruebas unitarias para ejecutar." -ForegroundColor Yellow
 }

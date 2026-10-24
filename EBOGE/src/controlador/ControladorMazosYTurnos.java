@@ -14,11 +14,20 @@ import javafx.scene.control.ChoiceDialog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import modelo.cartas.EfectoConObjetivo;
 import modelo.cartas.EfectoSinObjetivo;
 
 public class ControladorMazosYTurnos {
 	
+	private static final Logger LOGGER = Logger.getLogger(ControladorMazosYTurnos.class.getName());
+	private ControladorPrincipal controladorPrincipal;
+
 	private final Button btnAbrirMazoPropio;
 	private final Button btnAbrirMazoObjetivo;
 	private final Button btnAbrirMazoGlobal;
@@ -87,7 +96,7 @@ public class ControladorMazosYTurnos {
 
 	public void lanzarDado(MotorDeTurnos motor) {
 		Partida partida = motor.getPartida();
-		if (partida == null) return;
+		if (partida == null || partida.getJuegoTerminado()) return;
 
 		btnLanzarDado.setDisable(true); // Evitamos doble clic accidental
 
@@ -115,9 +124,81 @@ public class ControladorMazosYTurnos {
 		notificarEvento(jugador.getNombre() + " avanzó " + pasos + " casillas.");
 	}
 	
+	public void setControladorPrincipal(ControladorPrincipal controladorPrincipal) {
+		this.controladorPrincipal = controladorPrincipal;
+	}
+
+	public ControladorPrincipal getControladorPrincipal() {
+		return this.controladorPrincipal;
+	}
+
+	public void reiniciarPartida() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.reiniciarPartida();
+		}
+	}
+
 	private void manejarVictoria(Jugador jugador) {
 	    notificarEvento("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA ");
-	    btnLanzarDado.setDisable(true); 
+	    if (btnLanzarDado != null) {
+	        btnLanzarDado.setText("Reiniciar");
+	        btnLanzarDado.setDisable(false);
+	        btnLanzarDado.setOnAction(e -> reiniciarPartida());
+	        btnLanzarDado.getStyleClass().add("btn-reiniciar");
+	    }
+	    try {
+	        Platform.runLater(() -> mostrarDialogoVictoria(jugador));
+	    } catch (IllegalStateException e) {
+	        LOGGER.log(Level.WARNING, "Toolkit de JavaFX no inicializado: " + e.getMessage());
+	    }
+	}
+
+	protected void mostrarDialogoVictoria(Jugador jugador) {
+	    Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+	    alerta.initStyle(StageStyle.UNDECORATED);
+	    alerta.setTitle("EBOGE - ¡Victoria!");
+	    alerta.setHeaderText("¡VICTORIA! ¡" + jugador.getNombre() + " HA GANADO LA PARTIDA!");
+	    alerta.setContentText("¡Felicidades! Has alcanzado la meta.\n¿Deseas reiniciar la partida para volver a la configuración o salir?");
+	    alerta.setGraphic(null);
+
+	    if (btnLanzarDado != null && btnLanzarDado.getScene() != null && btnLanzarDado.getScene().getWindow() != null) {
+	        alerta.initOwner(btnLanzarDado.getScene().getWindow());
+	    }
+
+	    ButtonType btnReiniciar = new ButtonType("Reiniciar", ButtonBar.ButtonData.OK_DONE);
+	    ButtonType btnSalir = new ButtonType("Salir", ButtonBar.ButtonData.CANCEL_CLOSE);
+	    alerta.getButtonTypes().setAll(btnReiniciar, btnSalir);
+
+	    try {
+	        if (getClass().getResource("/vista/Partida.css") != null) {
+	            alerta.getDialogPane().getStylesheets().add(
+	                getClass().getResource("/vista/Partida.css").toExternalForm()
+	            );
+	            alerta.getDialogPane().getStyleClass().add("dialogo-gamer");
+	        }
+	    } catch (Exception e) {
+	        LOGGER.log(Level.WARNING, "No se pudo cargar el estilo del diálogo: " + e.getMessage());
+	    }
+
+	    Button botonReiniciar = (Button) alerta.getDialogPane().lookupButton(btnReiniciar);
+	    if (botonReiniciar != null) {
+	        botonReiniciar.setId("btnReiniciar");
+	        botonReiniciar.getStyleClass().addAll("btn-reiniciar", "btn-restart");
+	        botonReiniciar.setAccessibleText("Restart");
+	    }
+
+	    Button botonSalir = (Button) alerta.getDialogPane().lookupButton(btnSalir);
+	    if (botonSalir != null) {
+	        botonSalir.setId("btnSalir");
+	    }
+
+	    Optional<ButtonType> respuesta = alerta.showAndWait();
+	    if (respuesta.isPresent() && respuesta.get() == btnReiniciar) {
+	        reiniciarPartida();
+	    } else if (respuesta.isPresent() && respuesta.get() == btnSalir) {
+	        Platform.exit();
+	        System.exit(0);
+	    }
 	}
 
 	private void verificarEfectosTrampa(Jugador jugador) {
@@ -161,10 +242,10 @@ public class ControladorMazosYTurnos {
 	}
 
 	private void deshabilitarTodosLosMazos() {
-		btnAbrirMazoPropio.setDisable(true);
-		btnAbrirMazoObjetivo.setDisable(true);
-		btnAbrirMazoGlobal.setDisable(true);
-		btnAbrirMazoMaestro.setDisable(true);
+		if (btnAbrirMazoPropio != null) btnAbrirMazoPropio.setDisable(true);
+		if (btnAbrirMazoObjetivo != null) btnAbrirMazoObjetivo.setDisable(true);
+		if (btnAbrirMazoGlobal != null) btnAbrirMazoGlobal.setDisable(true);
+		if (btnAbrirMazoMaestro != null) btnAbrirMazoMaestro.setDisable(true);
 	}
 
 	private void actualizarBotonesMazos(TipoCarta tipoMazo) {
@@ -172,10 +253,10 @@ public class ControladorMazosYTurnos {
 		if (tipoMazo == null) return;
 
 		switch (tipoMazo) {
-		case PROPIA -> btnAbrirMazoPropio.setDisable(false);
-		case BLANCO -> btnAbrirMazoObjetivo.setDisable(false);
-		case GLOBAL -> btnAbrirMazoGlobal.setDisable(false);
-		case MAESTRA -> btnAbrirMazoMaestro.setDisable(false);
+		case PROPIA -> { if (btnAbrirMazoPropio != null) btnAbrirMazoPropio.setDisable(false); }
+		case BLANCO -> { if (btnAbrirMazoObjetivo != null) btnAbrirMazoObjetivo.setDisable(false); }
+		case GLOBAL -> { if (btnAbrirMazoGlobal != null) btnAbrirMazoGlobal.setDisable(false); }
+		case MAESTRA -> { if (btnAbrirMazoMaestro != null) btnAbrirMazoMaestro.setDisable(false); }
 		}
 	}
 

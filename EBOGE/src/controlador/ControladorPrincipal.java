@@ -70,6 +70,9 @@ public class ControladorPrincipal {
 
     
     public void mostrarVentanaDeConfiguracion() {
+        if (ventanaPrincipal == null) {
+            return;
+        }
         try {
             FXMLLoader loader = inicializarInterfaz(ventanaPrincipal, RUTA_VISTA_CONFIGURACION, "EBOGE - Configuración");
             ControladorConfiguracion configController = loader.getController();
@@ -108,6 +111,7 @@ public class ControladorPrincipal {
         try {
             FXMLLoader loader = inicializarInterfaz(ventanaPrincipal, RUTA_VISTA_PARTIDA, "EBOGE - Partida");
             ControladorVentanaDePartida controladorPartida = loader.getController();
+            controladorPartida.setControladorPrincipal(this);
             
             /* * Es necesario esperar a que el layout de JavaFX termine de calcular 
              * las dimensiones del Grid (tablero) antes de generar el mapa lógico.
@@ -143,6 +147,41 @@ public class ControladorPrincipal {
         Mapa mapaGenerado = generador.generarMapa(anchoTablero, altoTablero, carasDadoPartida);
 
         this.partida = new Partida(jugadoresPartida, carasDadoPartida, mapaGenerado);
+    }
+
+    /**
+     * Reinicia el estado completo de la partida y regresa al usuario a la pantalla
+     * inicial de configuración de jugadores (RF-13 / CR-01).
+     */
+    public void reiniciarPartida() {
+        this.partida = null;
+        this.jugadoresPartida = null;
+        this.carasDadoPartida = 0;
+        mostrarVentanaDeConfiguracion();
+    }
+
+    /**
+     * Obtiene la partida actual en curso o null si no hay ninguna activa.
+     * @return Objeto Partida o null.
+     */
+    public Partida getPartida() {
+        return this.partida;
+    }
+
+    /**
+     * Obtiene la lista de jugadores configurados para la partida actual.
+     * @return Lista de jugadores o null si no se ha configurado.
+     */
+    public List<Jugador> getJugadoresPartida() {
+        return this.jugadoresPartida;
+    }
+
+    /**
+     * Obtiene el número de caras del dado configurado para la partida actual.
+     * @return Número de caras del dado.
+     */
+    public int getCarasDadoPartida() {
+        return this.carasDadoPartida;
     }
 
 

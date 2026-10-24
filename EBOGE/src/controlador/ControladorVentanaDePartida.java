@@ -47,6 +47,15 @@ public class ControladorVentanaDePartida implements Initializable {
 	@FXML
 	private Button btnCartaGrande;
 
+	@FXML
+	private Button btnReiniciar;
+	@FXML
+	private StackPane overlayVictoria;
+	@FXML
+	private Label lblVictoriaMensaje;
+	@FXML
+	private Button btnReiniciarOverlay;
+
 	private static final double BORDE_LATERAL = 90.0;
 	private static final double MARGEN_SUPERIOR = 70.0;
 	private static final double FACTOR_ALTURA_TABLERO = 0.60;
@@ -81,6 +90,14 @@ public class ControladorVentanaDePartida implements Initializable {
 		
 		btnCartaGrande.setOnAction(e -> controladorMazosYTurnos.usarCartaPendiente(motor));
 
+		if (btnReiniciar != null) {
+			btnReiniciar.setOnAction(e -> reiniciarPartida());
+		}
+		if (btnReiniciarOverlay != null) {
+			btnReiniciarOverlay.setOnAction(e -> reiniciarPartida());
+		}
+
+		controladorMazosYTurnos.setComponentesVictoria(overlayVictoria, lblVictoriaMensaje, btnReiniciarOverlay);
 		controladorMazosYTurnos.estadoInicial();
 		if (controladorPrincipal != null) {
 			controladorMazosYTurnos.setControladorPrincipal(controladorPrincipal);
@@ -112,6 +129,47 @@ public class ControladorVentanaDePartida implements Initializable {
 	 */
 	public ControladorMazosYTurnos getControladorMazosYTurnos() {
 		return controladorMazosYTurnos;
+	}
+
+	/**
+	 * Reinicia la partida actual delegando al ControladorPrincipal.
+	 */
+	public void reiniciarPartida() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.reiniciarPartida();
+		}
+	}
+
+	public Button getBtnReiniciar() {
+		return btnReiniciar;
+	}
+
+	public void setBtnReiniciar(Button btnReiniciar) {
+		this.btnReiniciar = btnReiniciar;
+	}
+
+	public StackPane getOverlayVictoria() {
+		return overlayVictoria;
+	}
+
+	public void setOverlayVictoria(StackPane overlayVictoria) {
+		this.overlayVictoria = overlayVictoria;
+	}
+
+	public Label getLblVictoriaMensaje() {
+		return lblVictoriaMensaje;
+	}
+
+	public void setLblVictoriaMensaje(Label lblVictoriaMensaje) {
+		this.lblVictoriaMensaje = lblVictoriaMensaje;
+	}
+
+	public Button getBtnReiniciarOverlay() {
+		return btnReiniciarOverlay;
+	}
+
+	public void setBtnReiniciarOverlay(Button btnReiniciarOverlay) {
+		this.btnReiniciarOverlay = btnReiniciarOverlay;
 	}
 
 	public void inicializarConMotor(MotorDeTurnos motor) {

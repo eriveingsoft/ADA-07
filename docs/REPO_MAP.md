@@ -10,7 +10,7 @@
 
 ## Change Guide
 If changing game logic or rules:
-1. Check `Documentación/Diagramas/ERS_EBOGE.md`.
+1. Check REQUIREMENTS.md / SPEC.md
 2. Update the domain layer in `src/modelo/`.
 3. Modify controllers in `src/controlador/` if transition logic changes.
 4. Run `./scripts/verify_repo.ps1` to validate compilation.

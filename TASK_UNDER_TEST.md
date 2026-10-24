@@ -12,6 +12,6 @@ Implement a "Restart Game" (Reiniciar) functionality when a player reaches the v
 Launch the application, start a game, and force a player to reach the finish line (casilla meta). When the victory screen/dialog appears, click the new "Restart" button. Verify that the application successfully returns to the player configuration screen and the previous game state is cleared.
 
 ## Constraints
-- Use ERS_EBOGE.md as the source of truth.
+- Use REQUIREMENTS.md and SPEC.md as the source of truth.
 - Keep changes scoped to this task.
 - Do not redefine requirements in this file.

@@ -22,7 +22,15 @@
                mouseTransparent="true"
                AnchorPane.topAnchor="10.0"
                AnchorPane.leftAnchor="100.0"
-               AnchorPane.rightAnchor="100.0" />
+               AnchorPane.rightAnchor="200.0" />
+
+        <!-- Botón para reiniciar la partida en cualquier momento -->
+        <Button fx:id="btnReiniciar"
+                text="Reiniciar Partida"
+                styleClass="btn-reiniciar"
+                AnchorPane.topAnchor="10.0"
+                AnchorPane.rightAnchor="20.0"
+                prefHeight="36" prefWidth="160" />
                
         <!-- TABLERO -->
         <GridPane fx:id="gridTablero" />
@@ -96,6 +104,30 @@
 
             </children>
 
+        </StackPane>
+
+        <!-- ========================================================= -->
+        <!-- 🏆 OVERLAY DE VICTORIA Y REINICIO                        -->
+        <!-- ========================================================= -->
+        <StackPane fx:id="overlayVictoria"
+                   visible="false" managed="false"
+                   style="-fx-background-color: rgba(0,0,0,0.85);"
+                   AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0"
+                   AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="0">
+
+            <children>
+                <VBox alignment="CENTER" spacing="20" styleClass="panel-victoria">
+                    <children>
+                        <Label fx:id="lblVictoriaMensaje"
+                               text="¡VICTORIA!"
+                               styleClass="victoria-titulo" />
+                        <Button fx:id="btnReiniciarOverlay"
+                                text="Reiniciar Partida"
+                                styleClass="btn-reiniciar-grande"
+                                prefWidth="240" prefHeight="55" />
+                    </children>
+                </VBox>
+            </children>
         </StackPane>
 
     </children>

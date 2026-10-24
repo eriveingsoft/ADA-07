@@ -1,11 +1,15 @@
 # Read First
-1. Documentación/Diagramas/ERS_EBOGE.md
-2. docs/REPO_MAP.md
-3. TASK_UNDER_TEST.md
+1. REQUIREMENTS.md
+2. SPEC.md
+3. ARCHITECTURE.md
+4. TASKS.md
+5. docs/REPO_MAP.md
+6. TASK_UNDER_TEST.md
 
 # Sources of Truth
-Requirements live only in `Documentación/Diagramas/ERS_EBOGE.md`.
-Do not change requirements merely to make tests pass.
+- Requirements live only in `REQUIREMENTS.md` (and legacy specifications in `Documentación/ERS_EBOGE.md`).
+- Verifiable behavior lives in `SPEC.md`.
+- Do not change requirements/spec merely to make tests pass.
 
 # Repository Map
 - `src/controlador/`: Controllers coordinating views and model (MVC)
@@ -15,7 +19,7 @@ Do not change requirements merely to make tests pass.
 - `scripts/`: Deterministic checks and build scripts
 
 ## Standard Commands
-Verify: `./scripts/verify_repo.ps1`
+Verify: `./scripts/verify_repo.ps1` (or `./scripts/verify_repo.sh`)
 
 ## Change Rules
 - Keep changes scoped to the requested task.

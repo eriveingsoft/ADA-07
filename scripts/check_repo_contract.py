@@ -1,14 +1,17 @@
 from pathlib import Path
 import sys
 
-# Lista de archivos que el agente NUNCA debe borrar y siempre debe consultar
+# Lista de archivos esenciales del contrato Agent-Ready (ADA-08)
 required_files = [
     "AGENTS.md",
     "README.md",
-    "Documentación/Diagramas/ERS_EBOGE.md",
+    "REQUIREMENTS.md",
+    "SPEC.md",
+    "ARCHITECTURE.md",
+    "TASKS.md",
     "docs/REPO_MAP.md",
     "TASK_UNDER_TEST.md",
-    "scripts/verify_repo.ps1"
+    "scripts/verify_repo.ps1",
 ]
 
 missing = [path for path in required_files if not Path(path).exists()]

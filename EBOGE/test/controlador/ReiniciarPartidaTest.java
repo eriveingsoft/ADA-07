@@ -1,5 +1,9 @@
 package controlador;
 
+import javafx.application.Platform;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import modelo.AccionCasillaVictoria;
 import modelo.Partida;
 import modelo.jugador.ColorJugador;
@@ -7,6 +11,7 @@ import modelo.jugador.Jugador;
 import modelo.mapa.Casilla;
 import modelo.mapa.Mapa;
 import modelo.mapa.TipoCasilla;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +27,17 @@ public class ReiniciarPartidaTest {
     private List<Jugador> jugadores;
     private Mapa mapa;
     private Partida partida;
+
+    @BeforeAll
+    static void initToolkit() {
+        try {
+            Platform.startup(() -> {});
+        } catch (IllegalStateException e) {
+            // Ya inicializado
+        } catch (Exception e) {
+            // Entorno sin soporte gráfico
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -101,5 +117,36 @@ public class ReiniciarPartidaTest {
         assertNull(cp.getPartida(), "Al reiniciar desde ControladorMazosYTurnos, la partida debe limpiarse");
         assertNull(cp.getJugadoresPartida(), "Los jugadores deben limpiarse");
         assertEquals(0, cp.getCarasDadoPartida(), "El dado debe resetearse a 0");
+    }
+
+    @Test
+    @DisplayName("CR-01: Componentes de UI de Victoria y reinicio en ControladorVentanaDePartida")
+    void testComponentesVictoriaYReinicioUI() {
+        ControladorPrincipal cp = new ControladorPrincipal();
+        cp.configurarPartida(jugadores, 6);
+
+        ControladorVentanaDePartida cvp = new ControladorVentanaDePartida();
+        cvp.setControladorPrincipal(cp);
+
+        Button btnReiniciar = new Button("Reiniciar Partida");
+        StackPane overlayVictoria = new StackPane();
+        Label lblVictoriaMensaje = new Label();
+        Button btnReiniciarOverlay = new Button("Reiniciar Partida");
+
+        cvp.setBtnReiniciar(btnReiniciar);
+        cvp.setOverlayVictoria(overlayVictoria);
+        cvp.setLblVictoriaMensaje(lblVictoriaMensaje);
+        cvp.setBtnReiniciarOverlay(btnReiniciarOverlay);
+
+        assertEquals(btnReiniciar, cvp.getBtnReiniciar());
+        assertEquals(overlayVictoria, cvp.getOverlayVictoria());
+        assertEquals(lblVictoriaMensaje, cvp.getLblVictoriaMensaje());
+        assertEquals(btnReiniciarOverlay, cvp.getBtnReiniciarOverlay());
+
+        cvp.reiniciarPartida();
+
+        assertNull(cp.getPartida(), "Al reiniciar desde ControladorVentanaDePartida, la partida debe limpiarse");
+        assertNull(cp.getJugadoresPartida(), "Los jugadores deben limpiarse");
+        assertEquals(0, cp.getCarasDadoPartida(), "Las caras del dado deben resetearse");
     }
 }

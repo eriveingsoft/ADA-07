@@ -29,7 +29,15 @@ if (-Not (Test-Path -Path $binDir)) {
 # Detección dinámica y portable de JavaFX (sin hardcodear rutas absolutas de usuario)
 $fxPath = $env:PATH_TO_FX
 if (-not $fxPath -or -not (Test-Path $fxPath)) {
-    $candidate = Get-ChildItem -Path "${env:ProgramFiles}\Java", "${env:ProgramFiles(x86)}\Java", $env:JAVA_HOME -Filter "javafx-sdk*" -Recurse -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+    $searchRoots = @(
+        "${env:ProgramFiles}\Java",
+        "${env:ProgramFiles(x86)}\Java",
+        $env:JAVA_HOME,
+        (Join-Path $HOME "Downloads"),
+        $HOME
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    $candidate = Get-ChildItem -Path $searchRoots -Filter "javafx-sdk*" -Recurse -Depth 4 -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($candidate) {
         $fxPath = Join-Path $candidate.FullName "lib"
     }
@@ -50,6 +58,13 @@ if ($javaFiles.Count -gt 0) {
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: La compilación del código fuente falló." -ForegroundColor Red
         exit 1
+    }
+    # Normalizar casing de carpetas en bin (evitar que Controlador con mayúscula interfiera con imports de paquetes en minúscula)
+    $ctrlUpper = Join-Path $binDir "Controlador"
+    if (Test-Path $ctrlUpper) {
+        $tempDir = Join-Path $binDir "ctrl_norm_temp"
+        Rename-Item -Path $ctrlUpper -NewName "ctrl_norm_temp" -ErrorAction SilentlyContinue
+        Rename-Item -Path $tempDir -NewName "controlador" -ErrorAction SilentlyContinue
     }
 } else {
     Write-Host "No se encontraron archivos .java en src." -ForegroundColor Yellow
@@ -105,6 +120,8 @@ public class RunRestartTests {
         summary.printTo(new PrintWriter(System.out));
         if (summary.getTotalFailureCount() > 0) {
             System.exit(1);
+        } else {
+            System.exit(0);
         }
     }
 }

@@ -43,6 +43,10 @@ public class ControladorMazosYTurnos {
 	
 	private final Label lblMensajeEstado;
 
+	private StackPane overlayVictoria;
+	private Label lblVictoriaMensaje;
+	private Button btnReiniciarOverlay;
+
 	public ControladorMazosYTurnos(Button btnPropio, Button btnObjetivo, Button btnGlobal, Button btnMaestro,
 			Button btnLanzarDado, Label lblTurnoTexto, Label lblNombreJugador, Label lblResultadoDado,
 			StackPane overlayCarta, Button btnCartaGrande, Label lblMensajeEstado) {
@@ -138,14 +142,40 @@ public class ControladorMazosYTurnos {
 		}
 	}
 
+	public void setComponentesVictoria(StackPane overlayVictoria, Label lblVictoriaMensaje, Button btnReiniciarOverlay) {
+		this.overlayVictoria = overlayVictoria;
+		this.lblVictoriaMensaje = lblVictoriaMensaje;
+		this.btnReiniciarOverlay = btnReiniciarOverlay;
+		if (this.btnReiniciarOverlay != null) {
+			this.btnReiniciarOverlay.setOnAction(e -> reiniciarPartida());
+		}
+	}
+
+	public StackPane getOverlayVictoria() {
+		return overlayVictoria;
+	}
+
+	public Label getLblVictoriaMensaje() {
+		return lblVictoriaMensaje;
+	}
+
+	public Button getBtnReiniciarOverlay() {
+		return btnReiniciarOverlay;
+	}
+
 	private void manejarVictoria(Jugador jugador) {
-	    notificarEvento("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA ");
-	    if (btnLanzarDado != null) {
-	        btnLanzarDado.setText("Reiniciar");
-	        btnLanzarDado.setDisable(false);
-	        btnLanzarDado.setOnAction(e -> reiniciarPartida());
-	        btnLanzarDado.getStyleClass().add("btn-reiniciar");
-	    }
+		notificarEvento("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA ");
+		if (overlayVictoria != null && lblVictoriaMensaje != null) {
+			lblVictoriaMensaje.setText("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA");
+			overlayVictoria.setVisible(true);
+			overlayVictoria.setManaged(true);
+		}
+		if (btnLanzarDado != null) {
+			btnLanzarDado.setText("Reiniciar");
+			btnLanzarDado.setDisable(false);
+			btnLanzarDado.setOnAction(e -> reiniciarPartida());
+			btnLanzarDado.getStyleClass().add("btn-reiniciar");
+		}
 	    try {
 	        Platform.runLater(() -> mostrarDialogoVictoria(jugador));
 	    } catch (IllegalStateException e) {

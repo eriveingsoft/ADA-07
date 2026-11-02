@@ -126,7 +126,7 @@ public class RunRestartTests {
     }
 }
 "@
-    Set-Content -Path $testRunnerFile -Value $runnerSource -Encoding utf8
+    [System.IO.File]::WriteAllText($testRunnerFile, $runnerSource)
     if ($fxArgs.Count -gt 0) {
         javac $fxArgs -cp $cp -d $binDir $testRunnerFile
         java $fxArgs -cp $cp RunRestartTests

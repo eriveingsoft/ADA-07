@@ -13,7 +13,7 @@
    <children>
       <VBox alignment="CENTER" spacing="60.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Label fx:id="lblTitulo" alignment="CENTER" contentDisplay="CENTER" lineSpacing="40.0" prefHeight="77.0" styleClass="lblTitulo" text="EBOGE">
+            <Label fx:id="lblTitulo" alignment="CENTER" contentDisplay="CENTER" lineSpacing="40.0" styleClass="lblTitulo" text="EBOGE 2.0 BETA" textAlignment="CENTER">
                <font>
                   <Font size="29.0" />
                </font>

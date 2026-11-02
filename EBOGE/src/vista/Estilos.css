@@ -4,7 +4,7 @@
 
 .lblTitulo {
     -fx-font-family: "Press Start 2P";
-    -fx-font-size: 150px;
+    -fx-font-size: 75px;
     -fx-text-fill: #000000;
 
 }
@@ -187,4 +187,3 @@
     -fx-background-insets: 0;
     -fx-border-width: 0;
 }
-

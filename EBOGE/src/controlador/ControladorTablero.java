@@ -47,10 +47,9 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         gridTablero.getColumnConstraints().clear();
         gridTablero.getRowConstraints().clear();
 
-        // Espaciado entre casillas para apreciar el recorrido del caracol
-        gridTablero.setHgap(8);
-        gridTablero.setVgap(8);
-        gridTablero.setPadding(new Insets(8));
+        gridTablero.setHgap(4);
+        gridTablero.setVgap(4);
+        gridTablero.setPadding(new Insets(6));
         gridTablero.setAlignment(Pos.CENTER);
 
         configurarDistribucionGrid(filas, columnas);
@@ -94,12 +93,31 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                     }
                 }
 
-                StackPane celda = crearCelda(casilla, filas, columnas, direccion);
+                // Detectar conectividad en los 4 costados (camino continuo vs separación entre vueltas)
+                boolean topConnected = esCasillaConectada(f - 1, c, idx, matrizCasillas, filas, columnas);
+                boolean bottomConnected = esCasillaConectada(f + 1, c, idx, matrizCasillas, filas, columnas);
+                boolean leftConnected = esCasillaConectada(f, c - 1, idx, matrizCasillas, filas, columnas);
+                boolean rightConnected = esCasillaConectada(f, c + 1, idx, matrizCasillas, filas, columnas);
+
+                StackPane celda = crearCelda(casilla, filas, columnas, direccion,
+                        topConnected, bottomConnected, leftConnected, rightConnected);
                 gridTablero.add(celda, c, f);
             }
         }
 
         colocarFichasIniciales(jugadores);
+    }
+
+    private boolean esCasillaConectada(int f, int c, int indiceActual, Casilla[][] matriz, int totalFilas, int totalCols) {
+        if (f < 0 || f >= totalFilas || c < 0 || c >= totalCols) {
+            return false;
+        }
+        Casilla vecina = matriz[f][c];
+        if (vecina == null) {
+            return false;
+        }
+        int vecinaIdx = vecina.getIndice();
+        return vecinaIdx == indiceActual - 1 || vecinaIdx == indiceActual + 1;
     }
 
     private void configurarDistribucionGrid(int numeroFilas, int numeroColumnas) {
@@ -116,19 +134,36 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         }
     }
 
-    private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas, DireccionCamino direccion) {
+    private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas, DireccionCamino direccion,
+                                boolean topConn, boolean bottomConn, boolean leftConn, boolean rightConn) {
         StackPane celda = new StackPane();
-        celda.setPadding(Insets.EMPTY);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Estilo de losa individual de juego de mesa
+        // Separación asimétrica: 1px en lados conectados (sendero continuo), 6px en lados no conectados (canal divisorio entre vueltas)
+        int topMargin = topConn ? 1 : 6;
+        int bottomMargin = bottomConn ? 1 : 6;
+        int leftMargin = leftConn ? 1 : 6;
+        int rightMargin = rightConn ? 1 : 6;
+        GridPane.setMargin(celda, new Insets(topMargin, rightMargin, bottomMargin, leftMargin));
+
+        // Bordes diferenciados: lados no conectados llevan muro divisorio dorado (#E5A93C, 3px), lados conectados son tenues (#2A2A3C, 0.5px)
+        String topWidth = topConn ? "0.5px" : "3px";
+        String bottomWidth = bottomConn ? "0.5px" : "3px";
+        String leftWidth = leftConn ? "0.5px" : "3px";
+        String rightWidth = rightConn ? "0.5px" : "3px";
+
+        String topColor = topConn ? "#2A2A3C" : "#E5A93C";
+        String bottomColor = bottomConn ? "#2A2A3C" : "#E5A93C";
+        String leftColor = leftConn ? "#2A2A3C" : "#E5A93C";
+        String rightColor = rightConn ? "#2A2A3C" : "#E5A93C";
+
         celda.setStyle(
             "-fx-background-color: #1c1c28;" +
-            "-fx-border-color: #4a4a60;" +
-            "-fx-border-width: 1.5px;" +
+            "-fx-border-width: " + topWidth + " " + rightWidth + " " + bottomWidth + " " + leftWidth + ";" +
+            "-fx-border-color: " + topColor + " " + rightColor + " " + bottomColor + " " + leftColor + ";" +
             "-fx-border-radius: 4px;" +
             "-fx-background-radius: 4px;" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.55), 4, 0, 0, 2);"
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.65), 5, 0, 0, 2);"
         );
 
         int indiceCasilla = casilla.getIndice();
@@ -142,11 +177,13 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         imagenFondoCasilla.setPreserveRatio(false);
 
         DoubleBinding anchoCasilla = gridTablero.widthProperty()
-                .subtract((totalColumnas - 1) * 8 + 16)
-                .divide(totalColumnas);
+                .subtract((totalColumnas - 1) * 4 + 12)
+                .divide(totalColumnas)
+                .subtract(leftMargin + rightMargin + 2);
         DoubleBinding altoCasilla = gridTablero.heightProperty()
-                .subtract((totalFilas - 1) * 8 + 16)
-                .divide(totalFilas);
+                .subtract((totalFilas - 1) * 4 + 12)
+                .divide(totalFilas)
+                .subtract(topMargin + bottomMargin + 2);
 
         imagenFondoCasilla.fitWidthProperty().bind(anchoCasilla);
         imagenFondoCasilla.fitHeightProperty().bind(altoCasilla);

@@ -137,6 +137,8 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
     private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas, DireccionCamino direccion,
                                 boolean topConn, boolean bottomConn, boolean leftConn, boolean rightConn) {
         StackPane celda = new StackPane();
+        celda.setMinSize(0, 0);
+        celda.setPrefSize(0, 0);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
         // Separación asimétrica destacada: 0px en lados conectados (camino continuo), 11px en lados no conectados (canal divisorio ancho entre bucles)
@@ -175,18 +177,9 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
 
         ImageView imagenFondoCasilla = new ImageView(imagenCasilla);
         imagenFondoCasilla.setPreserveRatio(false);
-
-        DoubleBinding anchoCasilla = gridTablero.widthProperty()
-                .subtract((totalColumnas - 1) * 4 + 12)
-                .divide(totalColumnas)
-                .subtract(leftMargin + rightMargin + 2);
-        DoubleBinding altoCasilla = gridTablero.heightProperty()
-                .subtract((totalFilas - 1) * 4 + 12)
-                .divide(totalFilas)
-                .subtract(topMargin + bottomMargin + 2);
-
-        imagenFondoCasilla.fitWidthProperty().bind(anchoCasilla);
-        imagenFondoCasilla.fitHeightProperty().bind(altoCasilla);
+        imagenFondoCasilla.setManaged(false);
+        imagenFondoCasilla.fitWidthProperty().bind(celda.widthProperty());
+        imagenFondoCasilla.fitHeightProperty().bind(celda.heightProperty());
         celda.getChildren().add(imagenFondoCasilla);
 
         Label etiquetaID = new Label(String.valueOf(indiceCasilla));
@@ -330,15 +323,9 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         Image img = new Image(getClass().getResourceAsStream(nuevoTipo.getRutaImagen()));
         ImageView fondo = new ImageView(img);
         fondo.setPreserveRatio(false);
-
-        DoubleBinding ancho = gridTablero.widthProperty()
-                .subtract((columnas - 1) * 8 + 16)
-                .divide(columnas);
-        DoubleBinding alto = gridTablero.heightProperty()
-                .subtract((filas - 1) * 8 + 16)
-                .divide(filas);
-        fondo.fitWidthProperty().bind(ancho);
-        fondo.fitHeightProperty().bind(alto);
+        fondo.setManaged(false);
+        fondo.fitWidthProperty().bind(celda.widthProperty());
+        fondo.fitHeightProperty().bind(celda.heightProperty());
 
         celda.getChildren().add(0, fondo);
 

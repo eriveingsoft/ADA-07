@@ -41,7 +41,11 @@
         </HBox>
                
         <!-- TABLERO -->
-        <GridPane fx:id="gridTablero" />
+        <GridPane fx:id="gridTablero"
+                  AnchorPane.topAnchor="65.0"
+                  AnchorPane.leftAnchor="40.0"
+                  AnchorPane.rightAnchor="40.0"
+                  AnchorPane.bottomAnchor="255.0" />
 
         <!-- BARRA INFERIOR -->
         <HBox fx:id="barraInferior" spacing="15" alignment="CENTER"

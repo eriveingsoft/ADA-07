@@ -51,6 +51,9 @@ public class ControladorPrincipal {
     }
 
     public void mostrarVentanaDeInicio() {
+        if (ventanaPrincipal == null) {
+            return;
+        }
         try {
             cargarFuentesGlobales();
 
@@ -158,6 +161,16 @@ public class ControladorPrincipal {
         this.jugadoresPartida = null;
         this.carasDadoPartida = 0;
         mostrarVentanaDeConfiguracion();
+    }
+
+    /**
+     * Abandona la partida activa, resetea el estado completo y regresa al menú de inicio (RF-16 / CR-02).
+     */
+    public void salirAlMenuPrincipal() {
+        this.partida = null;
+        this.jugadoresPartida = null;
+        this.carasDadoPartida = 0;
+        mostrarVentanaDeInicio();
     }
 
     /**

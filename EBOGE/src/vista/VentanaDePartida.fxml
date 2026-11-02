@@ -22,15 +22,23 @@
                mouseTransparent="true"
                AnchorPane.topAnchor="10.0"
                AnchorPane.leftAnchor="100.0"
-               AnchorPane.rightAnchor="200.0" />
+               AnchorPane.rightAnchor="380.0" />
 
-        <!-- Botón para reiniciar la partida en cualquier momento -->
-        <Button fx:id="btnReiniciar"
-                text="Reiniciar Partida"
-                styleClass="btn-reiniciar"
-                AnchorPane.topAnchor="10.0"
-                AnchorPane.rightAnchor="20.0"
-                prefHeight="36" prefWidth="160" />
+        <!-- Botones de control superior: Reiniciar y Salir al Menú (CR-01 / CR-02) -->
+        <HBox spacing="10" alignment="CENTER_RIGHT"
+              AnchorPane.topAnchor="10.0"
+              AnchorPane.rightAnchor="20.0">
+            <children>
+                <Button fx:id="btnReiniciar"
+                        text="Reiniciar Partida"
+                        styleClass="btn-reiniciar"
+                        prefHeight="36" prefWidth="160" />
+                <Button fx:id="btnSalirMenu"
+                        text="Salir al Menú"
+                        styleClass="btn-salir-menu"
+                        prefHeight="36" prefWidth="140" />
+            </children>
+        </HBox>
                
         <!-- TABLERO -->
         <GridPane fx:id="gridTablero" />
@@ -121,10 +129,18 @@
                         <Label fx:id="lblVictoriaMensaje"
                                text="¡VICTORIA!"
                                styleClass="victoria-titulo" />
-                        <Button fx:id="btnReiniciarOverlay"
-                                text="Reiniciar Partida"
-                                styleClass="btn-reiniciar-grande"
-                                prefWidth="240" prefHeight="55" />
+                        <HBox spacing="15" alignment="CENTER">
+                            <children>
+                                <Button fx:id="btnReiniciarOverlay"
+                                        text="Reiniciar Partida"
+                                        styleClass="btn-reiniciar-grande"
+                                        prefWidth="220" prefHeight="55" />
+                                <Button fx:id="btnSalirMenuOverlay"
+                                        text="Salir al Menú"
+                                        styleClass="btn-salir-grande"
+                                        prefWidth="200" prefHeight="55" />
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
             </children>

@@ -55,6 +55,10 @@ public class ControladorVentanaDePartida implements Initializable {
 	private Label lblVictoriaMensaje;
 	@FXML
 	private Button btnReiniciarOverlay;
+	@FXML
+	private Button btnSalirMenu;
+	@FXML
+	private Button btnSalirMenuOverlay;
 
 	private static final double BORDE_LATERAL = 90.0;
 	private static final double MARGEN_SUPERIOR = 70.0;
@@ -95,6 +99,12 @@ public class ControladorVentanaDePartida implements Initializable {
 		}
 		if (btnReiniciarOverlay != null) {
 			btnReiniciarOverlay.setOnAction(e -> reiniciarPartida());
+		}
+		if (btnSalirMenu != null) {
+			btnSalirMenu.setOnAction(e -> salirAlMenuPrincipal());
+		}
+		if (btnSalirMenuOverlay != null) {
+			btnSalirMenuOverlay.setOnAction(e -> salirAlMenuPrincipal());
 		}
 
 		controladorMazosYTurnos.setComponentesVictoria(overlayVictoria, lblVictoriaMensaje, btnReiniciarOverlay);
@@ -146,6 +156,31 @@ public class ControladorVentanaDePartida implements Initializable {
 
 	public void setBtnReiniciar(Button btnReiniciar) {
 		this.btnReiniciar = btnReiniciar;
+	}
+
+	/**
+	 * Abandona la partida actual y regresa a la pantalla de inicio (RF-16 / CR-02).
+	 */
+	public void salirAlMenuPrincipal() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.salirAlMenuPrincipal();
+		}
+	}
+
+	public Button getBtnSalirMenu() {
+		return btnSalirMenu;
+	}
+
+	public void setBtnSalirMenu(Button btnSalirMenu) {
+		this.btnSalirMenu = btnSalirMenu;
+	}
+
+	public Button getBtnSalirMenuOverlay() {
+		return btnSalirMenuOverlay;
+	}
+
+	public void setBtnSalirMenuOverlay(Button btnSalirMenuOverlay) {
+		this.btnSalirMenuOverlay = btnSalirMenuOverlay;
 	}
 
 	public StackPane getOverlayVictoria() {

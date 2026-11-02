@@ -66,6 +66,22 @@ if ($javaFiles.Count -gt 0) {
         Rename-Item -Path $ctrlUpper -NewName "ctrl_norm_temp" -ErrorAction SilentlyContinue
         Rename-Item -Path $tempDir -NewName "controlador" -ErrorAction SilentlyContinue
     }
+    # Sincronización de recursos (.fxml, .css, recursos) hacia bin (CR-02 / AC-16)
+    $vistaSrc = Join-Path $srcDir "vista"
+    $vistaBin = Join-Path $binDir "vista"
+    $vistaBinUpper = Join-Path $binDir "Vista"
+    if (Test-Path $vistaSrc) {
+        if (-not (Test-Path $vistaBin)) { New-Item -ItemType Directory -Path $vistaBin | Out-Null }
+        if (-not (Test-Path $vistaBinUpper)) { New-Item -ItemType Directory -Path $vistaBinUpper | Out-Null }
+        Copy-Item -Path "$vistaSrc/*" -Destination $vistaBin -Recurse -Force
+        Copy-Item -Path "$vistaSrc/*" -Destination $vistaBinUpper -Recurse -Force
+    }
+    $recSrc = "EBOGE/recursos"
+    $recBin = Join-Path $binDir "recursos"
+    if (Test-Path $recSrc) {
+        if (-not (Test-Path $recBin)) { New-Item -ItemType Directory -Path $recBin | Out-Null }
+        Copy-Item -Path "$recSrc/*" -Destination $recBin -Recurse -Force
+    }
 } else {
     Write-Host "No se encontraron archivos .java en src." -ForegroundColor Yellow
 }
@@ -110,7 +126,10 @@ import java.io.PrintWriter;
 public class RunRestartTests {
     public static void main(String[] args) {
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-            .selectors(selectClass("controlador.ReiniciarPartidaTest"))
+            .selectors(
+                selectClass("controlador.ReiniciarPartidaTest"),
+                selectClass("controlador.SalirPartidaTest")
+            )
             .build();
         Launcher launcher = LauncherFactory.create();
         SummaryGeneratingListener listener = new SummaryGeneratingListener();

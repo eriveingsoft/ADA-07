@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -17,6 +18,7 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
+import javafx.util.Duration;
 import modelo.CambioCasillaListener;
 import modelo.MovimientoListener;
 import modelo.jugador.Jugador;
@@ -342,14 +344,29 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
             fichasJugadores.put(jugador, ficha);
         }
 
-        Pane contAnterior = buscarContenedorFichas(posAnterior);
         Pane contNuevo = buscarContenedorFichas(nuevaPosicion);
+        if (contNuevo != null && contNuevo.getChildren().contains(ficha)) {
+            return;
+        }
 
+        Pane contAnterior = buscarContenedorFichas(posAnterior);
         if (contAnterior != null) {
             contAnterior.getChildren().remove(ficha);
         }
+        if (ficha.getParent() instanceof Pane parentActual) {
+            parentActual.getChildren().remove(ficha);
+        }
+
         if (contNuevo != null) {
             contNuevo.getChildren().add(ficha);
+            ScaleTransition salto = new ScaleTransition(Duration.millis(90), ficha);
+            salto.setFromX(1.0);
+            salto.setFromY(1.0);
+            salto.setToX(1.35);
+            salto.setToY(1.35);
+            salto.setAutoReverse(true);
+            salto.setCycleCount(2);
+            salto.play();
         }
 
         System.out.println("Moviendo " + jugador.getNombre() +

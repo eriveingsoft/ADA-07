@@ -1,9 +1,12 @@
 package controlador;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import modelo.MotorDeTurnos;
 import modelo.Partida;
 import modelo.cartas.Carta;
@@ -26,7 +29,10 @@ import modelo.cartas.EfectoSinObjetivo;
 public class ControladorMazosYTurnos {
 	
 	private static final Logger LOGGER = Logger.getLogger(ControladorMazosYTurnos.class.getName());
+	private static final double MS_POR_PASO = 220.0;
+
 	private ControladorPrincipal controladorPrincipal;
+	private Timeline timelineMovimiento;
 
 	private final Button btnAbrirMazoPropio;
 	private final Button btnAbrirMazoObjetivo;
@@ -102,13 +108,51 @@ public class ControladorMazosYTurnos {
 		Partida partida = motor.getPartida();
 		if (partida == null || partida.getJuegoTerminado()) return;
 
-		btnLanzarDado.setDisable(true); // Evitamos doble clic accidental
+		if (btnLanzarDado != null) {
+			btnLanzarDado.setDisable(true); // Evitamos doble clic mientras avanza casilla por casilla
+		}
 
 		Jugador jugador = motor.iniciarTurno();
+		int posInicial = jugador.getPosicion();
 		int pasos = motor.lanzarDado();
 		
 		mostrarResultadosDado(jugador, pasos);
-		
+
+		int totalCasillas = partida.getTotalCasillas();
+		int posDestino = Math.min(posInicial + pasos, totalCasillas - 1);
+		int pasosReales = posDestino - posInicial;
+
+		if (pasosReales <= 0) {
+			finalizarMovimientoDado(motor, partida, jugador, pasos);
+			return;
+		}
+
+		try {
+			detenerAnimacionMovimiento();
+			timelineMovimiento = new Timeline();
+
+			for (int i = 1; i <= pasosReales; i++) {
+				final int desde = posInicial + i - 1;
+				final int hasta = posInicial + i;
+				KeyFrame kf = new KeyFrame(Duration.millis(i * MS_POR_PASO), e -> {
+					partida.getGestorMovimientos().notificar(jugador, desde, hasta);
+				});
+				timelineMovimiento.getKeyFrames().add(kf);
+			}
+
+			timelineMovimiento.setOnFinished(e -> {
+				timelineMovimiento = null;
+				finalizarMovimientoDado(motor, partida, jugador, pasos);
+			});
+
+			timelineMovimiento.play();
+		} catch (IllegalStateException ex) {
+			// Fallback sincrónico en entornos headless (pruebas unitarias)
+			finalizarMovimientoDado(motor, partida, jugador, pasos);
+		}
+	}
+
+	private void finalizarMovimientoDado(MotorDeTurnos motor, Partida partida, Jugador jugador, int pasos) {
 		motor.calcularNuevaPosicion(pasos);
 		motor.ejecutarAccionEnCasilla();
 		
@@ -119,6 +163,13 @@ public class ControladorMazosYTurnos {
 
 	    verificarEfectosTrampa(jugador);	
 	    gestionarFlujoDeCartas(motor, partida);
+	}
+
+	private void detenerAnimacionMovimiento() {
+		if (timelineMovimiento != null) {
+			timelineMovimiento.stop();
+			timelineMovimiento = null;
+		}
 	}
 	
 	public void mostrarResultadosDado(Jugador jugador, int pasos) {
@@ -137,6 +188,7 @@ public class ControladorMazosYTurnos {
 	}
 
 	public void reiniciarPartida() {
+		detenerAnimacionMovimiento();
 		if (controladorPrincipal != null) {
 			controladorPrincipal.reiniciarPartida();
 		}
@@ -144,6 +196,7 @@ public class ControladorMazosYTurnos {
 
 
 	public void salirAlMenuPrincipal() {
+		detenerAnimacionMovimiento();
 		if (controladorPrincipal != null) {
 			controladorPrincipal.salirAlMenuPrincipal();
 		}
@@ -261,7 +314,9 @@ public class ControladorMazosYTurnos {
 		ocultarCartaEnPantalla();
 	    motor.terminarTurno(); 
 	    actualizarLabelTurno(partida.getJugadorActual());
-	    btnLanzarDado.setDisable(false);
+	    if (btnLanzarDado != null) {
+	        btnLanzarDado.setDisable(false);
+	    }
 	}
 
 	public void abrirMazo(TipoCarta tipo, MotorDeTurnos motor) {
@@ -309,7 +364,9 @@ public class ControladorMazosYTurnos {
 					+ "-fx-background-repeat: no-repeat;" + "-fx-background-position: center;";
 			btnCartaGrande.setStyle(style);
 		}
-		btnLanzarDado.setDisable(true); // Bloqueo mientras lee la carta
+		if (btnLanzarDado != null) {
+			btnLanzarDado.setDisable(true); // Bloqueo mientras lee la carta
+		}
 	}
 
 	private void ocultarCartaEnPantalla() {
@@ -326,7 +383,9 @@ public class ControladorMazosYTurnos {
 
 	    if (!motor.hayCartaPendiente()) {
 	        ocultarCartaEnPantalla();
-	        btnLanzarDado.setDisable(false);
+	        if (btnLanzarDado != null) {
+	            btnLanzarDado.setDisable(false);
+	        }
 	        return;
 	    }
 
@@ -344,7 +403,10 @@ public class ControladorMazosYTurnos {
 	        List<Jugador> objetivos = new ArrayList<>(partida.getJugadores());
 	        objetivos.remove(partida.getJugadorActual());
 
-	        if (objetivos.isEmpty()) { btnLanzarDado.setDisable(false); return; }
+	        if (objetivos.isEmpty()) {
+	            if (btnLanzarDado != null) btnLanzarDado.setDisable(false);
+	            return;
+	        }
 
 	        List<String> nombres = new ArrayList<>();
 	        for (Jugador jugador : objetivos) nombres.add(jugador.getNombre());

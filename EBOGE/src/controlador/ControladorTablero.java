@@ -139,23 +139,23 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         StackPane celda = new StackPane();
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Separación asimétrica: 1px en lados conectados (sendero continuo), 6px en lados no conectados (canal divisorio entre vueltas)
-        int topMargin = topConn ? 1 : 6;
-        int bottomMargin = bottomConn ? 1 : 6;
-        int leftMargin = leftConn ? 1 : 6;
-        int rightMargin = rightConn ? 1 : 6;
+        // Separación asimétrica destacada: 0px en lados conectados (camino continuo), 11px en lados no conectados (canal divisorio ancho entre bucles)
+        int topMargin = topConn ? 0 : 11;
+        int bottomMargin = bottomConn ? 0 : 11;
+        int leftMargin = leftConn ? 0 : 11;
+        int rightMargin = rightConn ? 0 : 11;
         GridPane.setMargin(celda, new Insets(topMargin, rightMargin, bottomMargin, leftMargin));
 
-        // Bordes diferenciados: lados no conectados llevan muro divisorio dorado (#E5A93C, 3px), lados conectados son tenues (#2A2A3C, 0.5px)
-        String topWidth = topConn ? "0.5px" : "3px";
-        String bottomWidth = bottomConn ? "0.5px" : "3px";
-        String leftWidth = leftConn ? "0.5px" : "3px";
-        String rightWidth = rightConn ? "0.5px" : "3px";
+        // Muro divisorio grueso y brillante: 5px de borde dorado (#FFD700) en lados no conectados, 0px en lados del camino
+        String topWidth = topConn ? "0px" : "5px";
+        String bottomWidth = bottomConn ? "0px" : "5px";
+        String leftWidth = leftConn ? "0px" : "5px";
+        String rightWidth = rightConn ? "0px" : "5px";
 
-        String topColor = topConn ? "#2A2A3C" : "#E5A93C";
-        String bottomColor = bottomConn ? "#2A2A3C" : "#E5A93C";
-        String leftColor = leftConn ? "#2A2A3C" : "#E5A93C";
-        String rightColor = rightConn ? "#2A2A3C" : "#E5A93C";
+        String topColor = topConn ? "transparent" : "#FFD700";
+        String bottomColor = bottomConn ? "transparent" : "#FFD700";
+        String leftColor = leftConn ? "transparent" : "#FFD700";
+        String rightColor = rightConn ? "transparent" : "#FFD700";
 
         celda.setStyle(
             "-fx-background-color: #1c1c28;" +
@@ -163,7 +163,7 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
             "-fx-border-color: " + topColor + " " + rightColor + " " + bottomColor + " " + leftColor + ";" +
             "-fx-border-radius: 4px;" +
             "-fx-background-radius: 4px;" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.65), 5, 0, 0, 2);"
+            "-fx-effect: dropshadow(three-pass-box, rgba(255, 215, 0, 0.45), 7, 0.3, 0, 0);"
         );
 
         int indiceCasilla = casilla.getIndice();
@@ -225,7 +225,10 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                     break;
             }
             indicadorDireccion.setStyle(
-                "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #FFE066;" +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1a1a24;" +
+                "-fx-background-color: #FFD700;" +
+                "-fx-background-radius: 6px;" +
+                "-fx-padding: 0 4px 0 4px;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 4, 0.8, 0, 0);"
             );
             celda.getChildren().add(indicadorDireccion);

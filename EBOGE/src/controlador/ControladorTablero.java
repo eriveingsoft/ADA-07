@@ -141,31 +141,14 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         celda.setPrefSize(0, 0);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Separación asimétrica destacada: 0px en lados conectados (camino continuo), 11px en lados no conectados (canal divisorio ancho entre bucles)
-        int topMargin = topConn ? 0 : 11;
-        int bottomMargin = bottomConn ? 0 : 11;
-        int leftMargin = leftConn ? 0 : 11;
-        int rightMargin = rightConn ? 0 : 11;
-        GridPane.setMargin(celda, new Insets(topMargin, rightMargin, bottomMargin, leftMargin));
-
-        // Muro divisorio grueso y brillante: 5px de borde dorado (#FFD700) en lados no conectados, 0px en lados del camino
-        String topWidth = topConn ? "0px" : "5px";
-        String bottomWidth = bottomConn ? "0px" : "5px";
-        String leftWidth = leftConn ? "0px" : "5px";
-        String rightWidth = rightConn ? "0px" : "5px";
-
-        String topColor = topConn ? "transparent" : "#FFD700";
-        String bottomColor = bottomConn ? "transparent" : "#FFD700";
-        String leftColor = leftConn ? "transparent" : "#FFD700";
-        String rightColor = rightConn ? "transparent" : "#FFD700";
+        // Margen uniforme (5px) para que todas las cuadrículas tengan exactamente el mismo tamaño y alineación perfecta
+        GridPane.setMargin(celda, new Insets(5));
 
         celda.setStyle(
             "-fx-background-color: #1c1c28;" +
-            "-fx-border-width: " + topWidth + " " + rightWidth + " " + bottomWidth + " " + leftWidth + ";" +
-            "-fx-border-color: " + topColor + " " + rightColor + " " + bottomColor + " " + leftColor + ";" +
             "-fx-border-radius: 4px;" +
             "-fx-background-radius: 4px;" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(255, 215, 0, 0.45), 7, 0.3, 0, 0);"
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.65), 5, 0, 0, 2);"
         );
 
         int indiceCasilla = casilla.getIndice();
@@ -175,12 +158,38 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                 getClass().getResourceAsStream(casilla.getTipo().getRutaImagen())
         );
 
+        // 1. Imagen de textura de la casilla
         ImageView imagenFondoCasilla = new ImageView(imagenCasilla);
         imagenFondoCasilla.setPreserveRatio(false);
         imagenFondoCasilla.setManaged(false);
         imagenFondoCasilla.fitWidthProperty().bind(celda.widthProperty());
         imagenFondoCasilla.fitHeightProperty().bind(celda.heightProperty());
         celda.getChildren().add(imagenFondoCasilla);
+
+        // 2. Overlay de borde dorado sobre la imagen (garantiza color dorado brillante #FFD700 sin que la imagen lo tape)
+        Pane overlayBorde = new Pane();
+        overlayBorde.setMouseTransparent(true);
+        overlayBorde.setManaged(false);
+        overlayBorde.prefWidthProperty().bind(celda.widthProperty());
+        overlayBorde.prefHeightProperty().bind(celda.heightProperty());
+
+        String topWidth = topConn ? "0px" : "4.5px";
+        String bottomWidth = bottomConn ? "0px" : "4.5px";
+        String leftWidth = leftConn ? "0px" : "4.5px";
+        String rightWidth = rightConn ? "0px" : "4.5px";
+
+        String topColor = topConn ? "transparent" : "#FFD700";
+        String bottomColor = bottomConn ? "transparent" : "#FFD700";
+        String leftColor = leftConn ? "transparent" : "#FFD700";
+        String rightColor = rightConn ? "transparent" : "#FFD700";
+
+        overlayBorde.setStyle(
+            "-fx-border-width: " + topWidth + " " + rightWidth + " " + bottomWidth + " " + leftWidth + ";" +
+            "-fx-border-color: " + topColor + " " + rightColor + " " + bottomColor + " " + leftColor + ";" +
+            "-fx-border-radius: 3px;" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(255, 215, 0, 0.7), 6, 0.5, 0, 0);"
+        );
+        celda.getChildren().add(overlayBorde);
 
         Label etiquetaID = new Label(String.valueOf(indiceCasilla));
         etiquetaID.setStyle(

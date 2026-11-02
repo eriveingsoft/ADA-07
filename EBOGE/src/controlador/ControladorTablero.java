@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.beans.binding.DoubleBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -16,6 +15,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Polygon;
 import modelo.CambioCasillaListener;
 import modelo.MovimientoListener;
 import modelo.jugador.Jugador;
@@ -47,8 +48,8 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         gridTablero.getColumnConstraints().clear();
         gridTablero.getRowConstraints().clear();
 
-        gridTablero.setHgap(4);
-        gridTablero.setVgap(4);
+        gridTablero.setHgap(2);
+        gridTablero.setVgap(2);
         gridTablero.setPadding(new Insets(6));
         gridTablero.setAlignment(Pos.CENTER);
 
@@ -93,14 +94,21 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                     }
                 }
 
-                // Detectar conectividad en los 4 costados (camino continuo vs separación entre vueltas)
+                // Detectar conectividad en los 4 costados (camino continuo vs muro dorado de la espiral)
                 boolean topConnected = esCasillaConectada(f - 1, c, idx, matrizCasillas, filas, columnas);
                 boolean bottomConnected = esCasillaConectada(f + 1, c, idx, matrizCasillas, filas, columnas);
                 boolean leftConnected = esCasillaConectada(f, c - 1, idx, matrizCasillas, filas, columnas);
                 boolean rightConnected = esCasillaConectada(f, c + 1, idx, matrizCasillas, filas, columnas);
 
+                // Detectar canal interno de separación entre vueltas concéntricas (mantiene rectos y alineados los pasillos)
+                boolean topCanal = esCanalInterno(f - 1, c, idx, matrizCasillas, filas, columnas);
+                boolean bottomCanal = esCanalInterno(f + 1, c, idx, matrizCasillas, filas, columnas);
+                boolean leftCanal = esCanalInterno(f, c - 1, idx, matrizCasillas, filas, columnas);
+                boolean rightCanal = esCanalInterno(f, c + 1, idx, matrizCasillas, filas, columnas);
+
                 StackPane celda = crearCelda(casilla, filas, columnas, direccion,
-                        topConnected, bottomConnected, leftConnected, rightConnected);
+                        topConnected, bottomConnected, leftConnected, rightConnected,
+                        topCanal, bottomCanal, leftCanal, rightCanal);
                 gridTablero.add(celda, c, f);
             }
         }
@@ -120,6 +128,19 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         return vecinaIdx == indiceActual - 1 || vecinaIdx == indiceActual + 1;
     }
 
+    private boolean esCanalInterno(int f, int c, int indiceActual, Casilla[][] matriz, int totalFilas, int totalCols) {
+        if (f < 0 || f >= totalFilas || c < 0 || c >= totalCols) {
+            return false;
+        }
+        Casilla vecina = matriz[f][c];
+        if (vecina == null) {
+            return false;
+        }
+        // Solo aplica el margen de canal del lado de la vuelta interior (índice mayor)
+        // para que todos los pasillos rectos conserven el mismo ancho/alto sin desalinearse en las esquinas
+        return indiceActual > vecina.getIndice() + 1;
+    }
+
     private void configurarDistribucionGrid(int numeroFilas, int numeroColumnas) {
         for (int c = 0; c < numeroColumnas; c++) {
             ColumnConstraints col = new ColumnConstraints();
@@ -135,26 +156,26 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
     }
 
     private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas, DireccionCamino direccion,
-                                boolean topConn, boolean bottomConn, boolean leftConn, boolean rightConn) {
+                                boolean topConn, boolean bottomConn, boolean leftConn, boolean rightConn,
+                                boolean topCanal, boolean bottomCanal, boolean leftCanal, boolean rightCanal) {
         StackPane celda = new StackPane();
         celda.setMinSize(0, 0);
         celda.setPrefSize(0, 0);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Distribución asimétrica con suma fija (12px): garantiza tamaño 100% idéntico y alineado, manteniendo el canal ancho entre bucles de la espiral
-        int leftMargin = (leftConn && !rightConn) ? 2 : (!leftConn && rightConn ? 10 : 6);
-        int rightMargin = 12 - leftMargin;
-
-        int topMargin = (topConn && !bottomConn) ? 2 : (!topConn && bottomConn ? 10 : 6);
-        int bottomMargin = 12 - topMargin;
+        int canalV = (topCanal && bottomCanal) ? 10 : 12;
+        int topMargin = topCanal ? canalV : 0;
+        int bottomMargin = bottomCanal ? canalV : 0;
+        int leftMargin = leftCanal ? 12 : 0;
+        int rightMargin = rightCanal ? 12 : 0;
 
         GridPane.setMargin(celda, new Insets(topMargin, rightMargin, bottomMargin, leftMargin));
 
         celda.setStyle(
             "-fx-background-color: #1c1c28;" +
-            "-fx-border-radius: 4px;" +
-            "-fx-background-radius: 4px;" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.65), 5, 0, 0, 2);"
+            "-fx-border-radius: 3px;" +
+            "-fx-background-radius: 3px;" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.75), 6, 0, 0, 2);"
         );
 
         int indiceCasilla = casilla.getIndice();
@@ -164,7 +185,7 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                 getClass().getResourceAsStream(casilla.getTipo().getRutaImagen())
         );
 
-        // 1. Imagen de textura de la casilla
+        // 1. Imagen de textura de la casilla (posición 0 para que tipoCasillaCambiado la reemplace directamente)
         ImageView imagenFondoCasilla = new ImageView(imagenCasilla);
         imagenFondoCasilla.setPreserveRatio(false);
         imagenFondoCasilla.setManaged(false);
@@ -172,17 +193,17 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         imagenFondoCasilla.fitHeightProperty().bind(celda.heightProperty());
         celda.getChildren().add(imagenFondoCasilla);
 
-        // 2. Overlay de borde dorado sobre la imagen (garantiza color dorado brillante #FFD700 sin que la imagen lo tape)
+        // 2. Overlay de muro dorado brillante (#FFD700) sobre la imagen en los bordes que delimitan el caracol
         Pane overlayBorde = new Pane();
         overlayBorde.setMouseTransparent(true);
-        overlayBorde.setManaged(false);
-        overlayBorde.prefWidthProperty().bind(celda.widthProperty());
-        overlayBorde.prefHeightProperty().bind(celda.heightProperty());
+        overlayBorde.setMinSize(0, 0);
+        overlayBorde.setPrefSize(0, 0);
+        overlayBorde.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        String topWidth = topConn ? "0px" : "4.5px";
-        String bottomWidth = bottomConn ? "0px" : "4.5px";
-        String leftWidth = leftConn ? "0px" : "4.5px";
-        String rightWidth = rightConn ? "0px" : "4.5px";
+        String topWidth = topConn ? "0px" : "5px";
+        String bottomWidth = bottomConn ? "0px" : "5px";
+        String leftWidth = leftConn ? "0px" : "5px";
+        String rightWidth = rightConn ? "0px" : "5px";
 
         String topColor = topConn ? "transparent" : "#FFD700";
         String bottomColor = bottomConn ? "transparent" : "#FFD700";
@@ -192,65 +213,77 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         overlayBorde.setStyle(
             "-fx-border-width: " + topWidth + " " + rightWidth + " " + bottomWidth + " " + leftWidth + ";" +
             "-fx-border-color: " + topColor + " " + rightColor + " " + bottomColor + " " + leftColor + ";" +
-            "-fx-border-radius: 3px;" +
-            "-fx-effect: dropshadow(three-pass-box, rgba(255, 215, 0, 0.7), 6, 0.5, 0, 0);"
+            "-fx-border-radius: 2px;"
         );
         celda.getChildren().add(overlayBorde);
 
+        // 3. Etiqueta con el número de la casilla
         Label etiquetaID = new Label(String.valueOf(indiceCasilla));
         etiquetaID.setStyle(
-                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;" +
-                "-fx-effect: dropshadow(gaussian, black, 4, 0.8, 0, 0);"
+                "-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: white;" +
+                "-fx-effect: dropshadow(gaussian, black, 4, 0.85, 0, 0);"
         );
         StackPane.setAlignment(etiquetaID, Pos.TOP_LEFT);
-        StackPane.setMargin(etiquetaID, new Insets(3));
+        StackPane.setMargin(etiquetaID, new Insets(6, 0, 0, 8));
         celda.getChildren().add(etiquetaID);
 
-        // Indicador direccional de sendero en espiral hacia la siguiente casilla
+        // 4. Indicador direccional con triángulo geométrico rotado (tamaño 100% idéntico en las 4 direcciones)
         if (direccion != null) {
-            Label indicadorDireccion = new Label();
+            StackPane indicadorDireccion = new StackPane();
             indicadorDireccion.setMouseTransparent(true);
-            switch (direccion) {
-                case ABAJO:
-                    indicadorDireccion.setText("▼");
-                    StackPane.setAlignment(indicadorDireccion, Pos.BOTTOM_CENTER);
-                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 2, 0));
-                    break;
-                case DERECHA:
-                    indicadorDireccion.setText("▶");
-                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_RIGHT);
-                    StackPane.setMargin(indicadorDireccion, new Insets(0, 2, 0, 0));
-                    break;
-                case ARRIBA:
-                    indicadorDireccion.setText("▲");
-                    StackPane.setAlignment(indicadorDireccion, Pos.TOP_CENTER);
-                    StackPane.setMargin(indicadorDireccion, new Insets(2, 0, 0, 0));
-                    break;
-                case IZQUIERDA:
-                    indicadorDireccion.setText("◀");
-                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_LEFT);
-                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 0, 2));
-                    break;
-            }
             indicadorDireccion.setMinSize(22, 22);
             indicadorDireccion.setPrefSize(22, 22);
             indicadorDireccion.setMaxSize(22, 22);
-            indicadorDireccion.setAlignment(Pos.CENTER);
             indicadorDireccion.setStyle(
-                "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a24;" +
                 "-fx-background-color: #FFD700;" +
                 "-fx-background-radius: 11px;" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 3, 0.8, 0, 1);"
+                "-fx-border-color: #1a1a24;" +
+                "-fx-border-width: 1.5px;" +
+                "-fx-border-radius: 11px;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.85), 3, 0.7, 0, 1);"
             );
+
+            Polygon flecha = new Polygon(
+                -5.0, -3.5,
+                 5.0, -3.5,
+                 0.0,  5.0
+            );
+            flecha.setFill(Color.web("#1a1a24"));
+
+            switch (direccion) {
+                case ABAJO:
+                    flecha.setRotate(0);
+                    StackPane.setAlignment(indicadorDireccion, Pos.BOTTOM_CENTER);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 3, 0));
+                    break;
+                case DERECHA:
+                    flecha.setRotate(-90);
+                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_RIGHT);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 3, 0, 0));
+                    break;
+                case ARRIBA:
+                    flecha.setRotate(180);
+                    StackPane.setAlignment(indicadorDireccion, Pos.TOP_CENTER);
+                    StackPane.setMargin(indicadorDireccion, new Insets(3, 0, 0, 0));
+                    break;
+                case IZQUIERDA:
+                    flecha.setRotate(90);
+                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_LEFT);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 0, 3));
+                    break;
+            }
+            indicadorDireccion.getChildren().add(flecha);
             celda.getChildren().add(indicadorDireccion);
         }
 
+        // 5. Contenedor centrado de fichas de jugadores (evita tapar el número de la casilla en la esquina)
         FlowPane contenedorFichas = new FlowPane();
         contenedorFichas.setPickOnBounds(false);
         contenedorFichas.setId("fichas-" + indiceCasilla);
-        contenedorFichas.setHgap(3);
-        contenedorFichas.setVgap(3);
-        contenedorFichas.setPrefWrapLength(40);
+        contenedorFichas.setHgap(4);
+        contenedorFichas.setVgap(4);
+        contenedorFichas.setPrefWrapLength(44);
+        contenedorFichas.setAlignment(Pos.CENTER);
         StackPane.setAlignment(contenedorFichas, Pos.CENTER);
         celda.getChildren().add(contenedorFichas);
 
@@ -323,10 +356,6 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                 " de " + posAnterior + " a " + nuevaPosicion);
     }
 
-
-
-
-
     @Override
     public void tipoCasillaCambiado(int indiceCasilla,
                                     TipoCasilla tipoAnterior,
@@ -351,8 +380,8 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                 " actualizada a tipo " + nuevoTipo);
     }
 
-	@Override
-	public void movimiento(Jugador jugador, int posAnterior, int nuevaPos) {
-		 moverFicha(jugador, posAnterior, nuevaPos);
-	}
+    @Override
+    public void movimiento(Jugador jugador, int posAnterior, int nuevaPos) {
+        moverFicha(jugador, posAnterior, nuevaPos);
+    }
 }

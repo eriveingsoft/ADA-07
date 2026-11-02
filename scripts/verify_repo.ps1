@@ -42,6 +42,24 @@ if (-not $fxPath -or -not (Test-Path $fxPath)) {
         $fxPath = Join-Path $candidate.FullName "lib"
     }
 }
+if (-not $fxPath -or -not (Test-Path $fxPath)) {
+    Write-Host "JavaFX SDK no encontrado en rutas locales. Descargando OpenJFX para CI / entorno portable..." -ForegroundColor Yellow
+    $toolsDir = Join-Path $PSScriptRoot "../.tools"
+    if (-not (Test-Path $toolsDir)) { New-Item -ItemType Directory -Path $toolsDir | Out-Null }
+    $fxExtract = Join-Path $toolsDir "javafx-sdk-21.0.2"
+    if (-not (Test-Path $fxExtract)) {
+        $fxZip = Join-Path $toolsDir "javafx.zip"
+        $fxUrl = "https://download2.gluonhq.com/openjfx/21.0.2/openjfx-21.0.2_windows-x64_bin-sdk.zip"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $fxUrl -OutFile $fxZip -UseBasicParsing
+        Expand-Archive -Path $fxZip -DestinationPath $toolsDir -Force
+        Remove-Item $fxZip -Force -ErrorAction SilentlyContinue
+    }
+    $candidate = Get-ChildItem -Path $toolsDir -Filter "javafx-sdk*" -Recurse -Depth 3 -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($candidate) {
+        $fxPath = Join-Path $candidate.FullName "lib"
+    }
+}
 $fxArgs = @()
 if ($fxPath -and (Test-Path $fxPath)) {
     $fxArgs = @("--module-path", $fxPath, "--add-modules", "javafx.controls,javafx.fxml,javafx.media")
@@ -96,6 +114,18 @@ if (Test-Path $m2Repo) {
         Select-Object -ExpandProperty FullName
 }
 $sep = [System.IO.Path]::PathSeparator
+if ($junitJars.Count -eq 0) {
+    Write-Host "JUnit no encontrado en .m2. Descargando JAR standalone de JUnit para CI / entorno portable..." -ForegroundColor Yellow
+    $toolsDir = Join-Path $PSScriptRoot "../.tools"
+    if (-not (Test-Path $toolsDir)) { New-Item -ItemType Directory -Path $toolsDir | Out-Null }
+    $junitStandalone = Join-Path $toolsDir "junit-platform-console-standalone-1.10.2.jar"
+    if (-not (Test-Path $junitStandalone)) {
+        $junitUrl = "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $junitUrl -OutFile $junitStandalone -UseBasicParsing
+    }
+    $junitJars = @($junitStandalone)
+}
 $cp = if ($junitJars.Count -gt 0) { "$binDir$sep" + ($junitJars -join $sep) } else { $binDir }
 
 $testFiles = Get-ChildItem -Path $testDir -Recurse -Filter *.java | Select-Object -ExpandProperty FullName

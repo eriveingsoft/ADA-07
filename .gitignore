@@ -2,8 +2,8 @@
 EBOGE/bin/
 bin/
 *.class
+.tools/
 
 # IDE and tool configuration
 .settings/
 .vscode/
-

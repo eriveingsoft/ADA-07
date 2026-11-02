@@ -225,16 +225,17 @@ public class ControladorMazosYTurnos {
 
 	private void manejarVictoria(Jugador jugador) {
 		notificarEvento("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA ");
-		if (overlayVictoria != null && lblVictoriaMensaje != null) {
-			lblVictoriaMensaje.setText("¡VICTORIA! " + jugador.getNombre() + " HA GANADO LA PARTIDA");
-			overlayVictoria.setVisible(true);
-			overlayVictoria.setManaged(true);
-		}
 		if (btnLanzarDado != null) {
 			btnLanzarDado.setText("Reiniciar");
 			btnLanzarDado.setDisable(false);
 			btnLanzarDado.setOnAction(e -> reiniciarPartida());
 			btnLanzarDado.getStyleClass().add("btn-reiniciar");
+		}
+		if (overlayVictoria != null && lblVictoriaMensaje != null) {
+			lblVictoriaMensaje.setText("¡VICTORIA!\n¡" + jugador.getNombre().toUpperCase() + " HA GANADO LA PARTIDA!\n¡Felicidades, has alcanzado la meta!");
+			overlayVictoria.setVisible(true);
+			overlayVictoria.setManaged(true);
+			return;
 		}
 	    try {
 	        Platform.runLater(() -> mostrarDialogoVictoria(jugador));

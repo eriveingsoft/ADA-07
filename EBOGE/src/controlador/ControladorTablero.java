@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.beans.binding.DoubleBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -29,6 +30,10 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
 
     private int filas;
     private int columnas;
+    private enum DireccionCamino {
+        ABAJO, DERECHA, ARRIBA, IZQUIERDA
+    }
+
 
     public ControladorTablero(GridPane gridTablero) {
         this.gridTablero = gridTablero;
@@ -38,20 +43,58 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         this.filas = mapa.getLargoMapa();
         this.columnas = mapa.getAnchoMapa();
 
-        Casilla[][] matrizCasillas = mapa.getCasillas();
-
         gridTablero.getChildren().clear();
         gridTablero.getColumnConstraints().clear();
         gridTablero.getRowConstraints().clear();
 
+        // Espaciado entre casillas para apreciar el recorrido del caracol
+        gridTablero.setHgap(8);
+        gridTablero.setVgap(8);
+        gridTablero.setPadding(new Insets(8));
+        gridTablero.setAlignment(Pos.CENTER);
+
         configurarDistribucionGrid(filas, columnas);
+
+        Casilla[][] matrizCasillas = mapa.getCasillas();
+        int totalCasillas = filas * columnas;
+
+        // Mapear posición (fila, columna) de cada casilla para determinar la dirección del sendero
+        int[][] posiciones = new int[totalCasillas][2];
+        for (int f = 0; f < filas; f++) {
+            for (int c = 0; c < columnas; c++) {
+                Casilla cas = matrizCasillas[f][c];
+                if (cas != null && cas.getIndice() < totalCasillas) {
+                    posiciones[cas.getIndice()][0] = f;
+                    posiciones[cas.getIndice()][1] = c;
+                }
+            }
+        }
 
         for (int f = 0; f < filas; f++) {
             for (int c = 0; c < columnas; c++) {
                 Casilla casilla = matrizCasillas[f][c];
                 if (casilla == null) continue;
 
-                StackPane celda = crearCelda(casilla, filas, columnas);
+                int idx = casilla.getIndice();
+                DireccionCamino direccion = null;
+                if (idx < totalCasillas - 1) {
+                    int filaActual = posiciones[idx][0];
+                    int colActual = posiciones[idx][1];
+                    int filaSig = posiciones[idx + 1][0];
+                    int colSig = posiciones[idx + 1][1];
+
+                    if (filaSig > filaActual) {
+                        direccion = DireccionCamino.ABAJO;
+                    } else if (filaSig < filaActual) {
+                        direccion = DireccionCamino.ARRIBA;
+                    } else if (colSig > colActual) {
+                        direccion = DireccionCamino.DERECHA;
+                    } else if (colSig < colActual) {
+                        direccion = DireccionCamino.IZQUIERDA;
+                    }
+                }
+
+                StackPane celda = crearCelda(casilla, filas, columnas, direccion);
                 gridTablero.add(celda, c, f);
             }
         }
@@ -73,10 +116,20 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         }
     }
 
-    private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas) {
+    private StackPane crearCelda(Casilla casilla, int totalFilas, int totalColumnas, DireccionCamino direccion) {
         StackPane celda = new StackPane();
         celda.setPadding(Insets.EMPTY);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+        // Estilo de losa individual de juego de mesa
+        celda.setStyle(
+            "-fx-background-color: #1c1c28;" +
+            "-fx-border-color: #4a4a60;" +
+            "-fx-border-width: 1.5px;" +
+            "-fx-border-radius: 4px;" +
+            "-fx-background-radius: 4px;" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.55), 4, 0, 0, 2);"
+        );
 
         int indiceCasilla = casilla.getIndice();
         celda.setId(String.valueOf(indiceCasilla));
@@ -87,22 +140,59 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
 
         ImageView imagenFondoCasilla = new ImageView(imagenCasilla);
         imagenFondoCasilla.setPreserveRatio(false);
-        imagenFondoCasilla.fitWidthProperty().bind(
-                gridTablero.widthProperty().divide(totalColumnas)
-        );
-        imagenFondoCasilla.fitHeightProperty().bind(
-                gridTablero.heightProperty().divide(totalFilas)
-        );
+
+        DoubleBinding anchoCasilla = gridTablero.widthProperty()
+                .subtract((totalColumnas - 1) * 8 + 16)
+                .divide(totalColumnas);
+        DoubleBinding altoCasilla = gridTablero.heightProperty()
+                .subtract((totalFilas - 1) * 8 + 16)
+                .divide(totalFilas);
+
+        imagenFondoCasilla.fitWidthProperty().bind(anchoCasilla);
+        imagenFondoCasilla.fitHeightProperty().bind(altoCasilla);
         celda.getChildren().add(imagenFondoCasilla);
 
         Label etiquetaID = new Label(String.valueOf(indiceCasilla));
         etiquetaID.setStyle(
-                "-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;" +
+                "-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;" +
                 "-fx-effect: dropshadow(gaussian, black, 4, 0.8, 0, 0);"
         );
         StackPane.setAlignment(etiquetaID, Pos.TOP_LEFT);
-        StackPane.setMargin(etiquetaID, new Insets(4));
+        StackPane.setMargin(etiquetaID, new Insets(3));
         celda.getChildren().add(etiquetaID);
+
+        // Indicador direccional de sendero en espiral hacia la siguiente casilla
+        if (direccion != null) {
+            Label indicadorDireccion = new Label();
+            indicadorDireccion.setMouseTransparent(true);
+            switch (direccion) {
+                case ABAJO:
+                    indicadorDireccion.setText("▼");
+                    StackPane.setAlignment(indicadorDireccion, Pos.BOTTOM_CENTER);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 2, 0));
+                    break;
+                case DERECHA:
+                    indicadorDireccion.setText("▶");
+                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_RIGHT);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 2, 0, 0));
+                    break;
+                case ARRIBA:
+                    indicadorDireccion.setText("▲");
+                    StackPane.setAlignment(indicadorDireccion, Pos.TOP_CENTER);
+                    StackPane.setMargin(indicadorDireccion, new Insets(2, 0, 0, 0));
+                    break;
+                case IZQUIERDA:
+                    indicadorDireccion.setText("◀");
+                    StackPane.setAlignment(indicadorDireccion, Pos.CENTER_LEFT);
+                    StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 0, 2));
+                    break;
+            }
+            indicadorDireccion.setStyle(
+                "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #FFE066;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 4, 0.8, 0, 0);"
+            );
+            celda.getChildren().add(indicadorDireccion);
+        }
 
         FlowPane contenedorFichas = new FlowPane();
         contenedorFichas.setPickOnBounds(false);
@@ -201,12 +291,14 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         ImageView fondo = new ImageView(img);
         fondo.setPreserveRatio(false);
 
-        fondo.fitWidthProperty().bind(
-                gridTablero.widthProperty().divide(columnas)
-        );
-        fondo.fitHeightProperty().bind(
-                gridTablero.heightProperty().divide(filas)
-        );
+        DoubleBinding ancho = gridTablero.widthProperty()
+                .subtract((columnas - 1) * 8 + 16)
+                .divide(columnas);
+        DoubleBinding alto = gridTablero.heightProperty()
+                .subtract((filas - 1) * 8 + 16)
+                .divide(filas);
+        fondo.fitWidthProperty().bind(ancho);
+        fondo.fitHeightProperty().bind(alto);
 
         celda.getChildren().add(0, fondo);
 

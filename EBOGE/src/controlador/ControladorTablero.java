@@ -141,8 +141,14 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
         celda.setPrefSize(0, 0);
         celda.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Margen uniforme (5px) para que todas las cuadrículas tengan exactamente el mismo tamaño y alineación perfecta
-        GridPane.setMargin(celda, new Insets(5));
+        // Distribución asimétrica con suma fija (12px): garantiza tamaño 100% idéntico y alineado, manteniendo el canal ancho entre bucles de la espiral
+        int leftMargin = (leftConn && !rightConn) ? 2 : (!leftConn && rightConn ? 10 : 6);
+        int rightMargin = 12 - leftMargin;
+
+        int topMargin = (topConn && !bottomConn) ? 2 : (!topConn && bottomConn ? 10 : 6);
+        int bottomMargin = 12 - topMargin;
+
+        GridPane.setMargin(celda, new Insets(topMargin, rightMargin, bottomMargin, leftMargin));
 
         celda.setStyle(
             "-fx-background-color: #1c1c28;" +
@@ -226,12 +232,15 @@ public class ControladorTablero implements MovimientoListener, CambioCasillaList
                     StackPane.setMargin(indicadorDireccion, new Insets(0, 0, 0, 2));
                     break;
             }
+            indicadorDireccion.setMinSize(22, 22);
+            indicadorDireccion.setPrefSize(22, 22);
+            indicadorDireccion.setMaxSize(22, 22);
+            indicadorDireccion.setAlignment(Pos.CENTER);
             indicadorDireccion.setStyle(
-                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1a1a24;" +
+                "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a24;" +
                 "-fx-background-color: #FFD700;" +
-                "-fx-background-radius: 6px;" +
-                "-fx-padding: 0 4px 0 4px;" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 4, 0.8, 0, 0);"
+                "-fx-background-radius: 11px;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 3, 0.8, 0, 1);"
             );
             celda.getChildren().add(indicadorDireccion);
         }

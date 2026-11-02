@@ -56,7 +56,10 @@ public class SalirPartidaTest {
     void testControladorPrincipalSalirAlMenuPrincipal() {
         ControladorPrincipal cp = new ControladorPrincipal();
         cp.configurarPartida(jugadores, 6);
+        cp.setPartida(partida);
 
+        // Verificamos estado activo antes de salir (evita falsa confianza - RF-02)
+        assertNotNull(cp.getPartida(), "La partida activa no debe ser nula antes de salir");
         assertEquals(jugadores, cp.getJugadoresPartida(), "Los jugadores deben estar configurados inicialmente");
         assertEquals(6, cp.getCarasDadoPartida(), "Las caras del dado deben estar configuradas");
 
@@ -73,9 +76,11 @@ public class SalirPartidaTest {
         ControladorVentanaDePartida cvp = new ControladorVentanaDePartida();
         ControladorPrincipal cp = new ControladorPrincipal();
         cp.configurarPartida(jugadores, 8);
+        cp.setPartida(partida);
 
         cvp.setControladorPrincipal(cp);
         assertEquals(cp, cvp.getControladorPrincipal(), "El controlador principal debe estar asociado");
+        assertNotNull(cp.getPartida(), "La partida activa debe estar presente antes de delegar la salida");
 
         cvp.salirAlMenuPrincipal();
 

@@ -142,6 +142,13 @@ public class ControladorMazosYTurnos {
 		}
 	}
 
+
+	public void salirAlMenuPrincipal() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.salirAlMenuPrincipal();
+		}
+	}
+
 	public void setComponentesVictoria(StackPane overlayVictoria, Label lblVictoriaMensaje, Button btnReiniciarOverlay) {
 		this.overlayVictoria = overlayVictoria;
 		this.lblVictoriaMensaje = lblVictoriaMensaje;
@@ -226,8 +233,8 @@ public class ControladorMazosYTurnos {
 	    if (respuesta.isPresent() && respuesta.get() == btnReiniciar) {
 	        reiniciarPartida();
 	    } else if (respuesta.isPresent() && respuesta.get() == btnSalir) {
-	        Platform.exit();
-	        System.exit(0);
+
+	        salirAlMenuPrincipal();
 	    }
 	}
 

@@ -1,0 +1,8 @@
+# Build outputs and transient binaries
+EBOGE/bin/
+bin/
+*.class
+
+# IDE and tool configuration
+.settings/
+.vscode/

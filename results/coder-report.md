@@ -63,3 +63,21 @@ Base commit: cc71952
 [x] Ready for independent review
 
 This report is NOT an approval.
+
+## Fix Cycle
+### Findings Addressed (from results/human-review-decisions.md)
+1. **RF-01 (MUST FIX - Architecture Boundary / Binary Pollution)**:
+   - Untracked `EBOGE/bin/` from git index (`git rm -r --cached EBOGE/bin/`).
+   - Created root `.gitignore` to prevent transient class and media build artifacts from being committed.
+2. **RF-02 (SHOULD FIX - Test False Confidence)**:
+   - Added `setPartida(Partida partida)` setter in `ControladorPrincipal.java`.
+   - Updated `SalirPartidaTest.java` to inject an active `Partida` instance and assert `assertNotNull` before exit and `assertNull` after exit, guaranteeing genuine state transition validation.
+3. **RF-03 (SHOULD FIX - Victory Dialog Process Termination)**:
+   - Refactored `ControladorMazosYTurnos.java` line 236 to delegate to `salirAlMenuPrincipal()` instead of `System.exit(0)`, preserving application process integrity as dictated by `FR-16`.
+4. **RF-04 (SHOULD FIX - PR Diff Alignment)**:
+   - Fast-forwarded local `main` to base commit `cc71952`.
+   - Regenerated `results/pr.diff` and `results/commits.txt` so the candidate diff strictly reflects CR-02.
+5. **RF-05 (OPTIONAL - Confirmation Dialog)**:
+   - Deferred as technical debt per human decision.
+
+

@@ -182,6 +182,14 @@ public class ControladorPrincipal {
     }
 
     /**
+     * Asigna la partida activa (útil para pruebas y orquestación).
+     * @param partida Objeto Partida a asignar.
+     */
+    public void setPartida(Partida partida) {
+        this.partida = partida;
+    }
+
+    /**
      * Obtiene la lista de jugadores configurados para la partida actual.
      * @return Lista de jugadores o null si no se ha configurado.
      */

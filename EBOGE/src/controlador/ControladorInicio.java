@@ -65,26 +65,32 @@ public class ControladorInicio  implements Initializable{
 	@FXML
 	private AnchorPane menuInicial;
 
-	private MediaPlayer reproductorMusica;
+	private static MediaPlayer reproductorMusica;
 	
 	private Runnable accionJugar;
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		btnMusica.setText(ICONO_SONIDO_ACTIVO);
-		
-		iniciarMusicaDeFondo();
 		animacionTitulo();		
 		cargarListaCanciones();
         
 		if (!cboxMusica.getItems().isEmpty()) {
 	        String nombreASeleccionar = TEMA_PRINCIPAL.replace(".mp3", "");
-	        
 	        cboxMusica.getSelectionModel().select(nombreASeleccionar);
 	        if (cboxMusica.getSelectionModel().isEmpty()) {
 	             cboxMusica.getSelectionModel().select(0);
 	        }
 	    }
+		configurarListenerCombo();
+
+		if (reproductorMusica == null) {
+			btnMusica.setText(ICONO_SONIDO_ACTIVO);
+			btnMusica.setSelected(false);
+			iniciarMusicaDeFondo();
+		} else {
+			btnMusica.setSelected(reproductorMusica.isMute());
+			btnMusica.setText(reproductorMusica.isMute() ? ICONO_SONIDO_MUTE : ICONO_SONIDO_ACTIVO);
+		}
 	}
 	
 	public void setOnJugar(Runnable accion) {
@@ -133,10 +139,12 @@ public class ControladorInicio  implements Initializable{
 	
 		
 	public void alternarEstadoSonido() {
-		if(btnMusica.isSelected()) {
+		if (reproductorMusica == null) {
+			return;
+		}
+		if (btnMusica.isSelected()) {
 			reproductorMusica.setMute(true);
 			btnMusica.setText(ICONO_SONIDO_MUTE); 
-			
 		} else {
 			reproductorMusica.setMute(false);
 			btnMusica.setText(ICONO_SONIDO_ACTIVO); 
@@ -168,7 +176,6 @@ public class ControladorInicio  implements Initializable{
                 agregarArchivoSiEsValido(archivo);
             }
             
-            configurarListenerCombo(); //Para cambiar la musica 
             	        
 
 	    } catch (URISyntaxException e) {
@@ -204,6 +211,7 @@ public class ControladorInicio  implements Initializable{
 	    if (reproductorMusica != null) {
 	        reproductorMusica.stop();
 	        reproductorMusica.dispose();
+	        reproductorMusica = null;
 	    }
 
 	    try {	     	    	
@@ -226,5 +234,17 @@ public class ControladorInicio  implements Initializable{
 	    } catch (Exception e) {
 	        LOGGER.log(Level.SEVERE, "Error al cargar la música " + nombreArchivo + e.getMessage(), e);
 	    }	    
+	}
+
+	public static void detenerMusica() {
+		if (reproductorMusica != null) {
+			reproductorMusica.stop();
+			reproductorMusica.dispose();
+			reproductorMusica = null;
+		}
+	}
+
+	public static MediaPlayer getReproductorMusica() {
+		return reproductorMusica;
 	}
 }

@@ -94,14 +94,15 @@ public class ControladorPrincipal {
 
     public void mostrarVentanaDeCarga() {
         try {
-
             FXMLLoader loader = inicializarInterfaz(ventanaPrincipal, RUTA_VISTA_CARGAR_PARTIDA, "EBOGE - Cargando");
-
             ControladorPantallaCarga cargaController = loader.getController();
             
-            // Usamos Platform.runLater para asegurar que la transición de ventana 
-            // ocurra en el hilo de aplicación de JavaFX al finalizar la carga.
-            cargaController.setOnCargaTerminada(() -> {
+            // Iniciar la carga real asíncrona del mapa y la partida
+            cargaController.iniciarCargaReal(() -> {
+                double ancho = (ventanaPrincipal != null && ventanaPrincipal.getWidth() > 0) ? ventanaPrincipal.getWidth() : 1200;
+                double alto = (ventanaPrincipal != null && ventanaPrincipal.getHeight() > 0) ? (ventanaPrincipal.getHeight() - 160) : 650;
+                iniciarPartidaNueva((int) ancho, (int) alto);
+            }, () -> {
                 Platform.runLater(this::mostrarVentanaDePartida);
             });
 
@@ -117,18 +118,14 @@ public class ControladorPrincipal {
             controladorPartida.setControladorPrincipal(this);
             
             /* * Es necesario esperar a que el layout de JavaFX termine de calcular 
-             * las dimensiones del Grid (tablero) antes de generar el mapa lógico.
-             * Sin runLater, el ancho/alto podrían ser 0.0.
+             * las dimensiones del Grid (tablero) antes de renderizar.
              */
             Platform.runLater(() -> {
-                double anchoTablero = controladorPartida.getAnchoTablero();
-                double altoTablero = controladorPartida.getAltoTablero();
-
-                System.out.println("Ancho del Tablero: " + anchoTablero);
-                System.out.println("Alto del Tablero: " + altoTablero);
-
-                
-                iniciarPartidaNueva((int) anchoTablero, (int) altoTablero);
+                if (this.partida == null) {
+                    double anchoTablero = controladorPartida.getAnchoTablero();
+                    double altoTablero = controladorPartida.getAltoTablero();
+                    iniciarPartidaNueva((int) anchoTablero, (int) altoTablero);
+                }
 
                 MotorDeTurnos motor = new MotorDeTurnos(partida);
                 controladorPartida.inicializarConMotor(motor);

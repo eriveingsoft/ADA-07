@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -29,6 +30,69 @@ import javafx.util.Duration;
  * Gestiona la barra de progreso y los consejos aleatorios.
  */
 public class ControladorPantallaCarga implements Initializable{
+	/**
+	 * Inicia la carga real asíncrona generando el mapa y la partida en segundo plano.
+	 * La barra de progreso avanza en sincronía con la preparación real y culmina
+	 * inmediatamente cuando el mapa y el estado del juego están listos.
+	 */
+	public void iniciarCargaReal(Runnable tareaGeneracionMapa, Runnable accionAlTerminar) {
+		this.accionAlTerminar = accionAlTerminar;
+
+		if (timelineBarra != null) {
+			timelineBarra.stop();
+		}
+
+		Task<Void> tareaCarga = new Task<>() {
+			@Override
+			protected Void call() throws Exception {
+				updateProgress(0.15, 1.0);
+				Thread.sleep(120);
+
+				updateProgress(0.40, 1.0);
+				if (tareaGeneracionMapa != null) {
+					tareaGeneracionMapa.run();
+				}
+				updateProgress(0.85, 1.0);
+				Thread.sleep(150);
+
+				updateProgress(1.0, 1.0);
+				Thread.sleep(80);
+				return null;
+			}
+		};
+
+		barraCarga.progressProperty().bind(tareaCarga.progressProperty());
+		tareaCarga.progressProperty().addListener((obs, oldVal, newVal) -> {
+			if (newVal != null) {
+				lblCargando.setText((int) Math.round(newVal.doubleValue() * PORCENTAJE_CONVERSOR) + "%");
+			}
+		});
+
+		tareaCarga.setOnSucceeded(event -> {
+			barraCarga.progressProperty().unbind();
+			barraCarga.setProgress(1.0);
+			lblCargando.setText("100%");
+			if (timelineConsejos != null) {
+			timelineConsejos.stop();
+			}
+			if (this.accionAlTerminar != null) {
+				this.accionAlTerminar.run();
+			}
+		});
+
+		tareaCarga.setOnFailed(event -> {
+			barraCarga.progressProperty().unbind();
+			if (timelineConsejos != null) {
+				timelineConsejos.stop();
+			}
+			LOGGER.log(Level.SEVERE, "Error durante la carga real del mapa", tareaCarga.getException());
+		});
+
+		Thread hiloCarga = new Thread(tareaCarga, "EBOGE-CargaMapaThread");
+		hiloCarga.setDaemon(true);
+		hiloCarga.start();
+	}
+
 	
 	 private static final String RUTA_CURIOSIDADES = "/archivos/curiosidades.txt";
      private static final double INCREMENTO_PORCENTAJE = 0.01;
@@ -56,7 +120,8 @@ public class ControladorPantallaCarga implements Initializable{
 	 	 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {		
-		cargarBarraProgreso();
+		barraCarga.setProgress(0.0);
+		lblCargando.setText("0%");
 		cargarConsejos();
 	}
 	

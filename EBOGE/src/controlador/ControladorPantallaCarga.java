@@ -72,7 +72,9 @@ public class ControladorPantallaCarga implements Initializable{
             
         if (progresoActual >= PORCENTAJE_MAXIMO) {
         	timelineBarra.stop();
-            timelineConsejos.stop();
+            if (timelineConsejos != null) {
+                timelineConsejos.stop();
+            }
             
             Stage stage = null;
             if (barraCarga.getScene() != null) {

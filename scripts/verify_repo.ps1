@@ -99,6 +99,7 @@ if ($javaFiles.Count -gt 0) {
     if (Test-Path $recSrc) {
         if (-not (Test-Path $recBin)) { New-Item -ItemType Directory -Path $recBin | Out-Null }
         Copy-Item -Path "$recSrc/*" -Destination $recBin -Recurse -Force
+        Copy-Item -Path "$recSrc/*" -Destination $binDir -Recurse -Force
     }
 } else {
     Write-Host "No se encontraron archivos .java en src." -ForegroundColor Yellow

@@ -1,0 +1,32 @@
+name: Verify Repository (Shared Contract)
+
+on:
+  push:
+    branches: [ main, after-improvements ]
+  pull_request:
+    branches: [ main, after-improvements ]
+
+jobs:
+  verify:
+    name: Execute Shared Verification Contract
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Execute Shared Verification Script
+        shell: pwsh
+        run: |
+          ./scripts/verify_repo.ps1

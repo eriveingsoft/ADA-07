@@ -47,6 +47,19 @@ public class ControladorVentanaDePartida implements Initializable {
 	@FXML
 	private Button btnCartaGrande;
 
+	@FXML
+	private Button btnReiniciar;
+	@FXML
+	private StackPane overlayVictoria;
+	@FXML
+	private Label lblVictoriaMensaje;
+	@FXML
+	private Button btnReiniciarOverlay;
+	@FXML
+	private Button btnSalirMenu;
+	@FXML
+	private Button btnSalirMenuOverlay;
+
 	private static final double BORDE_LATERAL = 90.0;
 	private static final double MARGEN_SUPERIOR = 70.0;
 	private static final double FACTOR_ALTURA_TABLERO = 0.60;
@@ -55,6 +68,7 @@ public class ControladorVentanaDePartida implements Initializable {
 
 	private ControladorTablero controladorTablero;
 	private ControladorMazosYTurnos controladorMazosYTurnos;
+	private ControladorPrincipal controladorPrincipal;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -80,7 +94,117 @@ public class ControladorVentanaDePartida implements Initializable {
 		
 		btnCartaGrande.setOnAction(e -> controladorMazosYTurnos.usarCartaPendiente(motor));
 
+		if (btnReiniciar != null) {
+			btnReiniciar.setOnAction(e -> reiniciarPartida());
+		}
+		if (btnReiniciarOverlay != null) {
+			btnReiniciarOverlay.setOnAction(e -> reiniciarPartida());
+		}
+		if (btnSalirMenu != null) {
+			btnSalirMenu.setOnAction(e -> salirAlMenuPrincipal());
+		}
+		if (btnSalirMenuOverlay != null) {
+			btnSalirMenuOverlay.setOnAction(e -> salirAlMenuPrincipal());
+		}
+
+		controladorMazosYTurnos.setComponentesVictoria(overlayVictoria, lblVictoriaMensaje, btnReiniciarOverlay);
 		controladorMazosYTurnos.estadoInicial();
+		if (controladorPrincipal != null) {
+			controladorMazosYTurnos.setControladorPrincipal(controladorPrincipal);
+		}
+	}
+
+	/**
+	 * Asigna la referencia al controlador principal de la aplicación.
+	 * @param controladorPrincipal Instancia de ControladorPrincipal.
+	 */
+	public void setControladorPrincipal(ControladorPrincipal controladorPrincipal) {
+		this.controladorPrincipal = controladorPrincipal;
+		if (controladorMazosYTurnos != null) {
+			controladorMazosYTurnos.setControladorPrincipal(controladorPrincipal);
+		}
+	}
+
+	/**
+	 * Obtiene el controlador principal asignado a esta vista.
+	 * @return Instancia de ControladorPrincipal o null si no se ha asignado.
+	 */
+	public ControladorPrincipal getControladorPrincipal() {
+		return controladorPrincipal;
+	}
+
+	/**
+	 * Obtiene el controlador de mazos y turnos.
+	 * @return Instancia de ControladorMazosYTurnos.
+	 */
+	public ControladorMazosYTurnos getControladorMazosYTurnos() {
+		return controladorMazosYTurnos;
+	}
+
+	/**
+	 * Reinicia la partida actual delegando al ControladorPrincipal.
+	 */
+	public void reiniciarPartida() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.reiniciarPartida();
+		}
+	}
+
+	public Button getBtnReiniciar() {
+		return btnReiniciar;
+	}
+
+	public void setBtnReiniciar(Button btnReiniciar) {
+		this.btnReiniciar = btnReiniciar;
+	}
+
+	/**
+	 * Abandona la partida actual y regresa a la pantalla de inicio (RF-16 / CR-02).
+	 */
+	public void salirAlMenuPrincipal() {
+		if (controladorPrincipal != null) {
+			controladorPrincipal.salirAlMenuPrincipal();
+		}
+	}
+
+	public Button getBtnSalirMenu() {
+		return btnSalirMenu;
+	}
+
+	public void setBtnSalirMenu(Button btnSalirMenu) {
+		this.btnSalirMenu = btnSalirMenu;
+	}
+
+	public Button getBtnSalirMenuOverlay() {
+		return btnSalirMenuOverlay;
+	}
+
+	public void setBtnSalirMenuOverlay(Button btnSalirMenuOverlay) {
+		this.btnSalirMenuOverlay = btnSalirMenuOverlay;
+	}
+
+	public StackPane getOverlayVictoria() {
+		return overlayVictoria;
+	}
+
+	public void setOverlayVictoria(StackPane overlayVictoria) {
+		this.overlayVictoria = overlayVictoria;
+	}
+
+	public Label getLblVictoriaMensaje() {
+		return lblVictoriaMensaje;
+	}
+
+	public void setLblVictoriaMensaje(Label lblVictoriaMensaje) {
+		this.lblVictoriaMensaje = lblVictoriaMensaje;
+	}
+
+	public Button getBtnReiniciarOverlay() {
+		return btnReiniciarOverlay;
+	}
+
+	public void setBtnReiniciarOverlay(Button btnReiniciarOverlay) {
+		this.btnReiniciarOverlay = btnReiniciarOverlay;
 	}
 
 	public void inicializarConMotor(MotorDeTurnos motor) {
